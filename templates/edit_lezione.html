@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Modifica' if lezione.id_lezione else 'Nuova' }} Lezione{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">{{ 'Modifica' if lezione.id_lezione else 'Nuova' }} Lezione</span>
+                <form method="POST">
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <input id="nome_lezione" name="nome_lezione" type="text" 
+                                   value="{{ lezione.nome_lezione }}" required>
+                            <label for="nome_lezione">Nome Lezione</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="input-field col s12 m4">
+                            <input id="data" name="data" type="date" 
+                                   value="{{ lezione.data }}" required>
+                            <label for="data">Data</label>
+                        </div>
+                        <div class="input-field col s6 m4">
+                            <input id="orario_inizio" name="orario_inizio" type="time" 
+                                   value="{{ lezione.orario_inizio.strftime('%H:%M') if lezione.orario_inizio else '' }}" required>
+                            <label for="orario_inizio">Orario Inizio</label>
+                        </div>
+                        <div class="input-field col s6 m4">
+                            <input id="orario_fine" name="orario_fine" type="time" 
+                                   value="{{ lezione.orario_fine.strftime('%H:%M') if lezione.orario_fine else '' }}" required>
+                            <label for="orario_fine">Orario Fine</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <select name="id_insegnante" required>
+                                <option value="" disabled>Seleziona l'insegnante</option>
+                                {% for insegnante in insegnanti %}
+                                <option value="{{ insegnante.id_insegnante }}" 
+                                        {% if insegnante.id_insegnante == lezione.id_insegnante %}selected{% endif %}>
+                                    {{ insegnante.nome }} {{ insegnante.cognome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label>Insegnante</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <select name="classi_concorso" multiple>
+                                {% for classe in classi %}
+                                <option value="{{ classe.id_classe }}"
+                                        {% if classe in lezione.classi_concorso %}selected{% endif %}>
+                                    {{ classe.nome_classe }} - {{ classe.denominazione_classe }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label>Classi di Concorso</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <select name="dipartimenti" multiple>
+                                {% for dip in dipartimenti %}
+                                <option value="{{ dip.id }}"
+                                        {% if dip in lezione.dipartimenti %}selected{% endif %}>
+                                    {{ dip.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label>Dipartimenti</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <select name="percorsi" multiple>
+                                {% for perc in percorsi %}
+                                <option value="{{ perc.id_percorso }}"
+                                        {% if perc in lezione.percorsi %}selected{% endif %}>
+                                    {{ perc.nome_percorso }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label>Percorsi</label>
+                        </div>
+                    </div>
+
+                    {% if lezione.id_lezione %}
+                    <div class="row">
+                        <div class="col s6">
+                            <p>Durata: {{ lezione.durata }}</p>
+                        </div>
+                        <div class="col s6">
+                            <p>CFU: {{ lezione.cfu }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col s12">
+                            <button class="btn waves-effect waves-light blue" type="submit">
+                                Salva <i class="material-icons right">save</i>
+                            </button>
+                            <a href="{{ url_for('lezioni') }}" class="btn waves-effect waves-light red">
+                                Annulla <i class="material-icons right">cancel</i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+<ul class="right">
+    <li><a href="/register"><i class="material-icons left">person_add</i>Nuovo Utente</a></li>
+    <li><a href="/"><i class="material-icons left">home</i>Home</a></li>
+    <li><a href="/logout"><i class="material-icons left">exit_to_app</i>Logout</a></li>
+</ul><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Utenti - PEF Roma Tre</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="blue lighten-5">
+    <nav class="blue">
+        <div class="nav-wrapper container">
+            <a href="/" class="brand-logo">Gestione Utenti</a>
+            <ul class="right">
+                <li><a href="/register"><i class="material-icons left">person_add</i>Nuovo Utente</a></li>
+                <li><a href="/"><i class="material-icons left">home</i>Home</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col s12">
+                <h3 class="center">Lista Utenti</h3>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="card-panel {{ 'green' if category == 'success' else 'red' }} lighten-4">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <table class="highlight responsive-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Cognome</th>
+                            <th>Email</th>
+                            <th>Ruolo</th>
+                            <th>Stato</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.nome }}</td>
+                            <td>{{ user.cognome }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="new badge blue" data-badge-caption="">
+                                    {{ user.ruolo|title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="new badge green" data-badge-caption="">Attivo</span>
+                                {% else %}
+                                <span class="new badge grey" data-badge-caption="">Disattivato</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('edit_user', id=user.id) }}" class="btn-small blue">
+                                    <i class="material-icons">edit</i>
+                                </a>
+                                {% if user.is_active %}
+                                <form action="/admin/users/deactivate/{{ user.id }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn-small orange" onclick="return confirm('Sei sicuro di voler disattivare questo utente?')">
+                                        <i class="material-icons">block</i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form action="/admin/users/activate/{{ user.id }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn-small green">
+                                        <i class="material-icons">check_circle</i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <form action="/admin/users/delete/{{ user.id }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn-small red" onclick="return confirm('Sei sicuro di voler eliminare questo utente? Questa azione non può essere annullata.')">
+                                        <i class="material-icons">delete</i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+</html>

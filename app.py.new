@@ -1,0 +1,276 @@
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+from datetime import datetime, date
+from functools import wraps
+import os
+
+# Ruoli utente
+ROLE_ADMIN = 'admin'
+ROLE_STUDENTE = 'studente'
+ROLE_PROFESSORE = 'professore'
+ROLE_SEGRETERIA = 'segreteria'
+ROLE_TUTOR_COLLABORATORE = 'tutor_collaboratore'
+ROLE_TUTOR_COORDINATORE = 'tutor_coordinatore'
+
+# Carica le variabili d'ambiente
+load_dotenv()
+
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'dev')  # Chiave segreta per le sessioni
+
+# Configurazione del database
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    nome = db.Column(db.String(100), nullable=False)
+    cognome = db.Column(db.String(100), nullable=False)
+    ruolo = db.Column(db.String(50), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+def role_required(*roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for('login'))
+            if current_user.ruolo not in roles:
+                flash('Non hai i permessi necessari per accedere a questa pagina.', 'error')
+                return redirect(url_for('index'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+# [Qui vanno tutti i modelli esistenti...]
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        user = User.query.filter_by(email=email).first()
+        
+        if user and user.check_password(password) and user.is_active:
+            login_user(user)
+            flash('Login effettuato con successo!', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
+        flash('Email o password non validi.', 'error')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Logout effettuato con successo.', 'success')
+    return redirect(url_for('login'))
+
+@app.route('/register', methods=['GET', 'POST'])
+@login_required
+@role_required(ROLE_ADMIN)
+def register():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        nome = request.form['nome']
+        cognome = request.form['cognome']
+        ruolo = request.form['ruolo']
+        
+        if User.query.filter_by(email=email).first():
+            flash('Email già registrata.', 'error')
+            return redirect(url_for('register'))
+        
+        user = User(
+            email=email,
+            nome=nome,
+            cognome=cognome,
+            ruolo=ruolo,
+            is_active=True
+        )
+        user.set_password(password)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        flash('Utente registrato con successo!', 'success')
+        return redirect(url_for('admin_users'))
+    
+    return render_template('register.html')
+
+@app.route('/admin/users')
+@login_required
+@role_required(ROLE_ADMIN)
+def admin_users():
+    users = User.query.all()
+    return render_template('admin_users.html', users=users)
+
+@app.route('/admin/users/activate/<int:id>', methods=['POST'])
+@login_required
+@role_required(ROLE_ADMIN)
+def activate_user(id):
+    user = User.query.get_or_404(id)
+    user.is_active = True
+    db.session.commit()
+    flash('Utente attivato con successo!', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/deactivate/<int:id>', methods=['POST'])
+@login_required
+@role_required(ROLE_ADMIN)
+def deactivate_user(id):
+    user = User.query.get_or_404(id)
+    if user.id != current_user.id:  # Non permettere di disattivare se stessi
+        user.is_active = False
+        db.session.commit()
+        flash('Utente disattivato con successo!', 'success')
+    else:
+        flash('Non puoi disattivare il tuo account!', 'error')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/delete/<int:id>', methods=['POST'])
+@login_required
+@role_required(ROLE_ADMIN)
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    if user.id != current_user.id:  # Non permettere di eliminare se stessi
+        db.session.delete(user)
+        db.session.commit()
+        flash('Utente eliminato con successo!', 'success')
+    else:
+        flash('Non puoi eliminare il tuo account!', 'error')
+    return redirect(url_for('admin_users'))
+
+def calcola_totali_studente(id_studente):
+    tirocini_diretti = RegistroPresenzeTirocinioDiretto.query.filter_by(id_studente=id_studente).all()
+    tirocini_indiretti = RegistroPresenzeTirocinioIndiretto.query.filter_by(id_studente=id_studente).all()
+    
+    ore_dirette = sum(t.ore for t in tirocini_diretti)
+    ore_indirette = sum(t.ore for t in tirocini_indiretti)
+    cfu_diretti = sum(t.cfu for t in tirocini_diretti)
+    cfu_indiretti = sum(t.cfu for t in tirocini_indiretti)
+    
+    return {
+        'ore_tirocinio_diretto': ore_dirette,
+        'ore_tirocinio_indiretto': ore_indirette,
+        'cfu_tirocinio_diretto': cfu_diretti,
+        'cfu_tirocinio_indiretto': cfu_indiretti
+    }
+
+def calcola_totali_professore(id_professore):
+    lezioni = Lezioni.query.filter_by(id_insegnante=id_professore).all()
+    
+    numero_lezioni = len(lezioni)
+    ore_totali = sum(l.durata for l in lezioni if l.durata)
+    cfu_totali = sum(l.cfu for l in lezioni if l.cfu)
+    
+    return {
+        'numero_lezioni': numero_lezioni,
+        'ore_totali': ore_totali,
+        'cfu_totali': cfu_totali
+    }
+
+def calcola_totali_tutor(id_tutor):
+    tirocini = RegistroPresenzeTirocinioIndiretto.query.filter_by(id_tutor_coordinatore=id_tutor).all()
+    studenti = set(t.id_studente for t in tirocini)
+    
+    ore_totali = sum(t.ore for t in tirocini)
+    cfu_totali = sum(t.cfu for t in tirocini)
+    
+    return {
+        'numero_studenti': len(studenti),
+        'ore_totali': ore_totali,
+        'cfu_totali': cfu_totali
+    }
+
+@app.route('/')
+@login_required
+def index():
+    if current_user.ruolo == ROLE_SEGRETERIA:
+        return redirect(url_for('segreterie'))
+    elif current_user.ruolo == ROLE_STUDENTE:
+        return redirect(url_for('area_studente'))
+    elif current_user.ruolo == ROLE_PROFESSORE:
+        return redirect(url_for('area_professore'))
+    elif current_user.ruolo == ROLE_TUTOR_COLLABORATORE:
+        return redirect(url_for('area_tutor_collaboratore'))
+    elif current_user.ruolo == ROLE_TUTOR_COORDINATORE:
+        return redirect(url_for('area_tutor_coordinatore'))
+    elif current_user.ruolo == ROLE_ADMIN:
+        return redirect(url_for('admin_users'))
+    
+    return render_template('index.html')
+
+@app.route('/area_studente')
+@login_required
+@role_required(ROLE_STUDENTE)
+def area_studente():
+    totali = calcola_totali_studente(current_user.id)
+    return render_template('area_studente.html', **totali)
+
+@app.route('/area_professore')
+@login_required
+@role_required(ROLE_PROFESSORE)
+def area_professore():
+    lezioni = Lezioni.query.filter_by(id_insegnante=current_user.id).all()
+    totali = calcola_totali_professore(current_user.id)
+    return render_template('area_professore.html', lezioni=lezioni, **totali)
+
+@app.route('/area_tutor_coordinatore')
+@login_required
+@role_required(ROLE_TUTOR_COORDINATORE)
+def area_tutor_coordinatore():
+    tirocini = RegistroPresenzeTirocinioIndiretto.query.filter_by(id_tutor_coordinatore=current_user.id).all()
+    studenti_ids = set(t.id_studente for t in tirocini)
+    studenti = User.query.filter(User.id.in_(studenti_ids)).all()
+    
+    for studente in studenti:
+        totali = calcola_totali_studente(studente.id)
+        studente.ore_totali = totali['ore_tirocinio_indiretto']
+        studente.cfu_totali = totali['cfu_tirocinio_indiretto']
+    
+    totali = calcola_totali_tutor(current_user.id)
+    return render_template('area_tutor_coordinatore.html', studenti=studenti, **totali)
+
+# Protezione delle route esistenti
+@app.route('/segreterie')
+@login_required
+@role_required(ROLE_SEGRETERIA, ROLE_ADMIN)
+def segreterie():
+    # ... codice esistente ...
+
+@app.route('/add_insegnante', methods=['GET', 'POST'])
+@login_required
+@role_required(ROLE_SEGRETERIA, ROLE_ADMIN)
+def add_insegnante():
+    # ... codice esistente ...
+
+# ... altre route esistenti con protezione ...
+
+if __name__ == '__main__':
+    app.run(debug=True)

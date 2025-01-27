@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area Tutor Coordinatore - PEF Roma Tre</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="blue lighten-5">
+    <nav class="blue">
+        <div class="nav-wrapper container">
+            <a href="/" class="brand-logo">
+                <img src="/static/foto/logoromatre.png" alt="Logo Roma Tre" style="height: 50px; vertical-align: middle;">
+                Area Tutor Coordinatore
+            </a>
+            <ul class="right">
+                <li><a href="/logout"><i class="material-icons left">exit_to_app</i>Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row" style="margin-top: 2rem;">
+            <div class="col s12">
+                <h4>Benvenuto, {{ current_user.nome }} {{ current_user.cognome }}</h4>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="card-panel {{ 'green' if category == 'success' else 'red' }} lighten-4">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col s12">
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">I Tuoi Studenti</span>
+                        <table class="striped">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Cognome</th>
+                                    <th>Email</th>
+                                    <th>Ore Tirocinio</th>
+                                    <th>CFU</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for studente in studenti %}
+                                <tr>
+                                    <td>{{ studente.nome }}</td>
+                                    <td>{{ studente.cognome }}</td>
+                                    <td>{{ studente.email }}</td>
+                                    <td>{{ studente.ore_totali }}</td>
+                                    <td>{{ studente.cfu_totali }}</td>
+                                    <td>
+                                        <a href="/tutor/studente/{{ studente.id }}" class="btn-small blue">
+                                            <i class="material-icons">visibility</i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col s12">
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Registro Tirocinio Indiretto</span>
+                        <p>Gestisci le presenze degli studenti al tirocinio indiretto</p>
+                    </div>
+                    <div class="card-action">
+                        <a href="/registro_tirocinio_indiretto" class="btn blue waves-effect waves-light">
+                            <i class="material-icons left">assignment</i>Gestisci Registro
+                        </a>
+                        <a href="/registro_tirocinio_indiretto/add" class="btn blue waves-effect waves-light">
+                            <i class="material-icons left">add</i>Nuova Presenza
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col s12">
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Report e Statistiche</span>
+                        <div class="row">
+                            <div class="col s12 m4">
+                                <div class="card-panel center">
+                                    <i class="material-icons large">group</i>
+                                    <h5>{{ numero_studenti }}</h5>
+                                    <p>Studenti Totali</p>
+                                </div>
+                            </div>
+                            <div class="col s12 m4">
+                                <div class="card-panel center">
+                                    <i class="material-icons large">access_time</i>
+                                    <h5>{{ ore_totali }}</h5>
+                                    <p>Ore Erogate</p>
+                                </div>
+                            </div>
+                            <div class="col s12 m4">
+                                <div class="card-panel center">
+                                    <i class="material-icons large">school</i>
+                                    <h5>{{ cfu_totali }}</h5>
+                                    <p>CFU Erogati</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+</html>

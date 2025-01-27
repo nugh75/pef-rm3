@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PEF Roma Tre{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="blue lighten-5">
+    <nav class="blue darken-2">
+        <div class="nav-wrapper container">
+            <a href="/" class="brand-logo">PEF Roma Tre</a>
+            <a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+            <ul class="right hide-on-med-and-down">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.ruolo == 'admin' %}
+                        <li><a href="{{ url_for('admin_users') }}"><i class="material-icons left">people</i>Utenti</a></li>
+                        <li><a href="{{ url_for('register') }}"><i class="material-icons left">person_add</i>Nuovo Utente</a></li>
+                    {% endif %}
+                    {% if current_user.ruolo in ['segreteria', 'professore'] %}
+                        <li><a href="{{ url_for('lezioni') }}"><i class="material-icons left">school</i>Lezioni</a></li>
+                    {% endif %}
+                    {% if current_user.ruolo in ['segreteria', 'studente'] %}
+                        <li><a href="{{ url_for('registro_tirocinio_diretto') }}"><i class="material-icons left">assignment</i>Tirocinio Diretto</a></li>
+                        <li><a href="{{ url_for('registro_tirocinio_indiretto') }}"><i class="material-icons left">assignment_ind</i>Tirocinio Indiretto</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('logout') }}"><i class="material-icons left">exit_to_app</i>Logout</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <ul class="sidenav" id="mobile-nav">
+        {% if current_user.is_authenticated %}
+            {% if current_user.ruolo == 'admin' %}
+                <li><a href="{{ url_for('admin_users') }}"><i class="material-icons left">people</i>Utenti</a></li>
+                <li><a href="{{ url_for('register') }}"><i class="material-icons left">person_add</i>Nuovo Utente</a></li>
+            {% endif %}
+            {% if current_user.ruolo in ['segreteria', 'professore'] %}
+                <li><a href="{{ url_for('lezioni') }}"><i class="material-icons left">school</i>Lezioni</a></li>
+            {% endif %}
+            {% if current_user.ruolo in ['segreteria', 'studente'] %}
+                <li><a href="{{ url_for('registro_tirocinio_diretto') }}"><i class="material-icons left">assignment</i>Tirocinio Diretto</a></li>
+                <li><a href="{{ url_for('registro_tirocinio_indiretto') }}"><i class="material-icons left">assignment_ind</i>Tirocinio Indiretto</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('logout') }}"><i class="material-icons left">exit_to_app</i>Logout</a></li>
+        {% endif %}
+    </ul>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="card-panel {{ 'green' if category == 'success' else 'red' }} lighten-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var elems = document.querySelectorAll('.sidenav');
+            M.Sidenav.init(elems);
+            
+            var selects = document.querySelectorAll('select');
+            M.FormSelect.init(selects);
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

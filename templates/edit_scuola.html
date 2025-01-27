@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifica Scuola</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="blue lighten-5">
+
+    <nav class="blue">
+        <div class="nav-wrapper container">
+            <a href="/" class="brand-logo">Modifica Scuola</a>
+            <ul class="right">
+                <li><a href="/scuole_accreditate"><i class="material-icons left">arrow_back</i>Scuole</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h3 class="center">Modifica Scuola Accreditata</h3>
+        <form method="POST" class="col s12">
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="nome_scuola" name="nome_scuola" type="text" value="{{ scuola.nome_scuola }}" required>
+                    <label for="nome_scuola">Nome Scuola</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="indirizzo" name="indirizzo" type="text" value="{{ scuola.indirizzo }}">
+                    <label for="indirizzo">Indirizzo</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s6">
+                    <input id="referente" name="referente" type="text" value="{{ scuola.referente }}">
+                    <label for="referente">Referente</label>
+                </div>
+                <div class="input-field col s6">
+                    <input id="email_referente" name="email_referente" type="email" value="{{ scuola.email_referente }}">
+                    <label for="email_referente">Email Referente</label>
+                </div>
+            </div>
+            <button class="btn waves-effect waves-light blue" type="submit">
+                Salva Modifiche <i class="material-icons right">save</i>
+            </button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            M.updateTextFields();
+        });
+    </script>
+</body>
+</html>

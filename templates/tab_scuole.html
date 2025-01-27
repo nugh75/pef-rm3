@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scuole Accreditate</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="blue lighten-5">
+
+    <nav class="blue">
+        <div class="nav-wrapper container">
+            <a href="/" class="brand-logo">Scuole Accreditate</a>
+            <ul class="right">
+                <li><a href="/scuole_accreditate/add"><i class="material-icons left">add</i>Aggiungi Scuola</a></li>
+                <li><a href="/segreterie"><i class="material-icons left">arrow_back</i>Segreterie</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h3 class="center">Lista Scuole Accreditate</h3>
+        <table class="highlight">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome Scuola</th>
+                    <th>Indirizzo</th>
+                    <th>Referente</th>
+                    <th>Email Referente</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for scuola in scuole %}
+                <tr>
+                    <td>{{ scuola.id_scuola }}</td>
+                    <td>{{ scuola.nome_scuola }}</td>
+                    <td>{{ scuola.indirizzo }}</td>
+                    <td>{{ scuola.referente }}</td>
+                    <td>{{ scuola.email_referente }}</td>
+                    <td>
+                        <a href="/scuole_accreditate/edit/{{ scuola.id_scuola }}" class="btn-small blue"><i class="material-icons">edit</i></a>
+                        <form action="/scuole_accreditate/delete/{{ scuola.id_scuola }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn-small red" onclick="return confirm('Sei sicuro di voler eliminare questa scuola?')">
+                                <i class="material-icons">delete</i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+</html>

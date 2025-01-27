@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor Coordinatori</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="blue lighten-5">
+
+    <nav class="blue">
+        <div class="nav-wrapper container">
+            <a href="/" class="brand-logo">Tutor Coordinatori</a>
+            <ul class="right">
+                <li><a href="/tutor_coordinatori/add"><i class="material-icons left">add</i>Aggiungi Tutor</a></li>
+                <li><a href="/segreterie"><i class="material-icons left">arrow_back</i>Segreterie</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h3 class="center">Lista Tutor Coordinatori</h3>
+        <table class="highlight">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Cognome</th>
+                    <th>Email</th>
+                    <th>Telefono</th>
+                    <th>Dipartimento</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in tutor %}
+                <tr>
+                    <td>{{ t.id_tutor_coordinatore }}</td>
+                    <td>{{ t.nome }}</td>
+                    <td>{{ t.cognome }}</td>
+                    <td>{{ t.email }}</td>
+                    <td>{{ t.telefono }}</td>
+                    <td>{{ t.dipartimento }}</td>
+                    <td>
+                        <a href="/tutor_coordinatori/edit/{{ t.id_tutor_coordinatore }}" class="btn-small blue"><i class="material-icons">edit</i></a>
+                        <form action="/tutor_coordinatori/delete/{{ t.id_tutor_coordinatore }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn-small red" onclick="return confirm('Sei sicuro di voler eliminare questo tutor?')">
+                                <i class="material-icons">delete</i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+</html>

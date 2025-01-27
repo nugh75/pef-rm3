@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Lezione</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="blue lighten-5">
+    <nav class="blue">
+        <div class="nav-wrapper container">
+            <a href="/lezioni" class="brand-logo">Aggiungi Lezione</a>
+            <ul class="right">
+                <li><a href="/lezioni"><i class="material-icons left">arrow_back</i>Lezioni</a></li>
+                <li><a href="/"><i class="material-icons left">home</i>Home</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h3 class="center">Aggiungi Lezione</h3>
+        <form method="POST" class="col s12">
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="nome_lezione" name="nome_lezione" type="text" required>
+                    <label for="nome_lezione">Nome Lezione</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s6">
+                    <input id="data" name="data" type="date" required>
+                    <label for="data">Data</label>
+                </div>
+                <div class="input-field col s3">
+                    <input id="orario_inizio" name="orario_inizio" type="time" required>
+                    <label for="orario_inizio">Orario Inizio</label>
+                </div>
+                <div class="input-field col s3">
+                    <input id="orario_fine" name="orario_fine" type="time" required>
+                    <label for="orario_fine">Orario Fine</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <select name="id_insegnante" required>
+                        <option value="" disabled selected>Seleziona l'insegnante</option>
+                        {% for insegnante in insegnanti %}
+                        <option value="{{ insegnante.id_insegnante }}">
+                            {{ insegnante.nome }} {{ insegnante.cognome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <label>Insegnante</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <select name="classe_id" required>
+                        <option value="" disabled selected>Seleziona la classe</option>
+                        {% for classe in classi %}
+                        <option value="{{ classe.id_classe }}">
+                            {{ classe.nome_classe }} - {{ classe.denominazione_classe }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <label>Classe di Concorso</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <select name="classi_concorso" multiple required>
+                        <option value="" disabled>Seleziona le classi</option>
+                        {% for classe in classi %}
+                        <option value="{{ classe.id_classe }}">
+                            {{ classe.nome_classe }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <label>Classi di Concorso</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <select name="dipartimenti" multiple required>
+                        <option value="" disabled>Seleziona i dipartimenti</option>
+                        {% for dip in dipartimenti %}
+                        <option value="{{ dip.id }}">{{ dip.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <label>Dipartimenti</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <select name="percorsi" multiple required>
+                        <option value="" disabled>Seleziona i percorsi</option>
+                        {% for perc in percorsi %}
+                        <option value="{{ perc.id_percorso }}">{{ perc.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <label>Percorsi</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s6">
+                    <p>Durata calcolata: <span id="durata_calcolata">--:--</span></p>
+                </div>
+                <div class="input-field col s6">
+                    <p>CFU calcolati: <span id="cfu_calcolati">0.00</span></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <p class="grey-text">* La durata e i CFU verranno calcolati automaticamente in base agli orari inseriti (1 CFU = 4.5 ore)</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12 center-align">
+                    <button class="btn waves-effect waves-light blue" type="submit">
+                        Salva <i class="material-icons right">save</i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var elems = document.querySelectorAll('select');
+            M.FormSelect.init(elems);
+
+            // Aggiungi listener per il calcolo automatico
+            document.getElementById('orario_inizio').addEventListener('change', calcolaDurata);
+            document.getElementById('orario_fine').addEventListener('change', calcolaDurata);
+        });
+
+        function calcolaDurata() {
+            var inizio = document.getElementById('orario_inizio').value;
+            var fine = document.getElementById('orario_fine').value;
+
+            if (inizio && fine) {
+                // Converti gli orari in oggetti Date
+                var dataInizio = new Date('2000-01-01T' + inizio);
+                var dataFine = new Date('2000-01-01T' + fine);
+
+                // Calcola la differenza in millisecondi
+                var diffMs = dataFine - dataInizio;
+                
+                // Converti in ore e minuti
+                var ore = Math.floor(diffMs / (1000 * 60 * 60));
+                var minuti = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+                // Formatta la durata
+                var durata = String(ore).padStart(2, '0') + ':' + String(minuti).padStart(2, '0');
+                document.getElementById('durata_calcolata').textContent = durata;
+
+                // Calcola i CFU (1 CFU = 4.5 ore)
+                var oreTotali = ore + (minuti / 60);
+                var cfu = (oreTotali / 4.5).toFixed(2);
+                document.getElementById('cfu_calcolati').textContent = cfu;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Tabella Lezioni{% endblock %}
+
+{% block content %}
+    <!-- Stile custom per la tabella -->
+    <style>
+        .container {
+            width: 95% !important;
+            max-width: none;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        table {
+            font-size: 0.85rem;
+            width: 100%;
+        }
+        td, th {
+            padding: 8px 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        th {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .col-id { width: 40px; }
+        .col-nome { width: 200px; }
+        .col-data { width: 100px; }
+        .col-orario { width: 120px; }
+        .col-durata { width: 80px; }
+        .col-cfu { width: 60px; }
+        .col-insegnante { width: 150px; }
+        .col-classi { width: 200px; }
+        .col-dipartimenti { width: 200px; }
+        .col-percorsi { width: 200px; }
+        .col-azioni { width: 100px; }
+        
+        .description-cell {
+            max-width: 200px;
+            white-space: normal;
+            font-size: 0.8rem;
+        }
+        .action-cell {
+            white-space: nowrap;
+            width: 90px;
+            text-align: center;
+        }
+        .btn-small {
+            padding: 0 0.5rem;
+            height: 24px;
+            line-height: 24px;
+        }
+        .btn-small i {
+            font-size: 1rem;
+            line-height: 24px;
+        }
+    </style>
+
+    <div class="container">
+        <h3 class="center">Lista delle Lezioni</h3>
+        
+        <!-- Form di filtro migliorato -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Filtri</span>
+                <form id="filterForm" method="GET">
+                    <div class="row">
+                        <!-- Prima riga di filtri -->
+                        <div class="input-field col s12 m6 l4">
+                            <select name="insegnante" id="filter_insegnante">
+                                <option value="">Tutti gli insegnanti</option>
+                                {% for ins in tutti_insegnanti %}
+                                <option value="{{ ins.id_insegnante }}" {% if request.args.get('insegnante')|string == ins.id_insegnante|string %}selected{% endif %}>
+                                    {{ ins.nome }} {{ ins.cognome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label>Insegnante</label>
+                        </div>
+                        <div class="input-field col s12 m6 l4">
+                            <input id="filter_data" name="data" type="date" value="{{ request.args.get('data', '') }}">
+                            <label for="filter_data">Data</label>
+                        </div>
+                        <div class="input-field col s12 m6 l4">
+                            <input id="filter_orario" name="orario" type="time" value="{{ request.args.get('orario', '') }}">
+                            <label for="filter_orario">Orario di inizio</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Seconda riga di filtri -->
+                        <div class="input-field col s12 m6 l4">
+                            <select name="classe" id="filter_classe" multiple>
+                                {% for cl in tutte_classi %}
+                                <option value="{{ cl.id_classe }}" {% if cl.id_classe|string in request.args.getlist('classe') %}selected{% endif %}>
+                                    {{ cl.nome_classe }} - {{ cl.denominazione_classe }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label>Classi di Concorso</label>
+                        </div>
+                        <div class="input-field col s12 m6 l4">
+                            <select name="dipartimento" id="filter_dipartimento" multiple>
+                                {% for dip in dipartimenti %}
+                                <option value="{{ dip.id }}" {% if dip.id|string in request.args.getlist('dipartimento') %}selected{% endif %}>
+                                    {{ dip.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label>Dipartimenti</label>
+                        </div>
+                        <div class="input-field col s12 m6 l4">
+                            <select name="percorso" id="filter_percorso" multiple>
+                                {% for perc in percorsi %}
+                                <option value="{{ perc.id_percorso }}" {% if perc.id_percorso|string in request.args.getlist('percorso') %}selected{% endif %}>
+                                    {{ perc.nome_percorso }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label>Percorsi</label>
+                        </div>
+                    </div>
+
+                    <!-- Pulsanti di azione -->
+                    <div class="row">
+                        <div class="col s12 center-align">
+                            <button class="btn waves-effect waves-light blue" type="submit">
+                                Filtra <i class="material-icons right">filter_list</i>
+                            </button>
+                            <a href="{{ url_for('lezioni') }}" class="btn waves-effect waves-light red">
+                                Reset <i class="material-icons right">clear</i>
+                            </a>
+                            <a href="{{ url_for('add_lezione') }}" class="btn waves-effect waves-light green">
+                                Nuova Lezione <i class="material-icons right">add</i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mostra la somma dei CFU -->
+        <div class="right-align" style="margin-bottom: 20px;">
+            <p>Totale CFU: {{ cfu_sum }}</p>
+        </div>
+
+        <!-- Tabella delle lezioni -->
+        <div class="card">
+            <div class="card-content table-container">
+                <table class="highlight responsive-table">
+                    <thead>
+                        <tr>
+                            <th class="col-id">ID</th>
+                            <th class="col-nome">Nome Lezione</th>
+                            <th class="col-data">Data</th>
+                            <th class="col-orario">Orario</th>
+                            <th class="col-durata">Durata</th>
+                            <th class="col-cfu">CFU</th>
+                            <th class="col-insegnante">Insegnante</th>
+                            <th class="col-classi">Classi di Concorso</th>
+                            <th class="col-dipartimenti">Dipartimenti</th>
+                            <th class="col-percorsi">Percorsi</th>
+                            <th class="col-azioni">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lezione in lezioni %}
+                        <tr>
+                            <td>{{ lezione.id_lezione }}</td>
+                            <td>{{ lezione.nome_lezione }}</td>
+                            <td>{{ lezione.data.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ lezione.orario_inizio.strftime('%H:%M') }} - {{ lezione.orario_fine.strftime('%H:%M') }}</td>
+                            <td>{{ lezione.durata }}</td>
+                            <td>{{ "%.2f"|format(lezione.cfu|float) if lezione.cfu else '' }}</td>
+                            <td>{{ lezione.insegnante.cognome if lezione.insegnante else '' }}</td>
+                            <td class="description-cell">
+                                {% for classe in lezione.classi_concorso %}
+                                    {{ classe.nome_classe }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td class="description-cell">
+                                {% for dip in lezione.dipartimenti %}
+                                    {{ dip.nome }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td class="description-cell">
+                                {% for perc in lezione.percorsi %}
+                                    {{ perc.nome_percorso }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td class="action-cell">
+                                <a href="{{ url_for('edit_lezione', id=lezione.id_lezione) }}" class="btn-small blue waves-effect">
+                                    <i class="material-icons">edit</i>
+                                </a>
+                                <a href="{{ url_for('delete_lezione', id=lezione.id_lezione) }}" 
+                                   class="btn-small red waves-effect"
+                                   onclick="return confirm('Sei sicuro di voler eliminare questa lezione?')">
+                                    <i class="material-icons">delete</i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inizializza tutti i select di Materialize
+            var elems = document.querySelectorAll('select');
+            var instances = M.FormSelect.init(elems, {});
+
+            // Aggiungi l'evento submit al form
+            document.getElementById('filterForm').addEventListener('submit', function(e) {
+                // Rimuovi i parametri vuoti prima dell'invio
+                const formData = new FormData(this);
+                const searchParams = new URLSearchParams();
+
+                for (const [key, value] of formData) {
+                    if (value) {
+                        searchParams.append(key, value);
+                    }
+                }
+
+                // Reindirizza con i parametri non vuoti
+                window.location.href = '{{ url_for("lezioni") }}?' + searchParams.toString();
+                e.preventDefault();
+            });
+        });
+    </script>
+    {% endblock %}
+{% endblock %}

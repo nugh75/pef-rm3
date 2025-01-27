@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Registro Tirocinio Diretto{% endblock %}
+
+{% block content %}
+    <style>
+        .container {
+            width: 95% !important;
+            max-width: none;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        table {
+            font-size: 0.85rem;
+            width: 100%;
+        }
+        td, th {
+            padding: 8px 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        th {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .col-id { width: 40px; }
+        .col-studente { width: 200px; }
+        .col-tutor { width: 200px; }
+        .col-data { width: 100px; }
+        .col-ore { width: 80px; }
+        .col-cfu { width: 60px; }
+        .col-descrizione { width: 300px; }
+        .col-azioni { width: 100px; }
+    </style>
+
+    <div class="container">
+        <h3 class="center">Registro Tirocinio Diretto</h3>
+        <div class="card">
+            <div class="card-content">
+                <div class="row">
+                    <div class="col s12 right-align">
+                        <a href="{{ url_for('add_tirocinio_diretto') }}" class="btn waves-effect waves-light blue">
+                            Aggiungi Tirocinio <i class="material-icons right">add</i>
+                        </a>
+                    </div>
+                </div>
+                <form method="GET" class="row">
+                    <div class="input-field col s4">
+                        <input id="studente" name="studente" type="text" value="{{ studente }}">
+                        <label for="studente" class="active">Studente</label>
+                    </div>
+                    <div class="input-field col s4">
+                        <input id="tutor" name="tutor" type="text" value="{{ tutor }}">
+                        <label for="tutor" class="active">Tutor Coordinatore</label>
+                    </div>
+                    <div class="input-field col s4">
+                        <button class="btn waves-effect waves-light blue" type="submit">
+                            Filtra <i class="material-icons right">filter_list</i>
+                        </button>
+                    </div>
+                </form>
+                <div class="right-align" style="margin-bottom: 20px;">
+                    <p>Totale CFU: {{ cfu_sum }}</p>
+                </div>
+                <div class="table-container">
+                    <table class="highlight responsive-table">
+                        <thead>
+                            <tr>
+                                <th class="col-id">ID</th>
+                                <th class="col-studente">Studente</th>
+                                <th class="col-tutor">Tutor Coordinatore</th>
+                                <th class="col-data">Data</th>
+                                <th class="col-ore">Ore</th>
+                                <th class="col-cfu">CFU</th>
+                                <th class="col-descrizione">Descrizione Attività</th>
+                                <th class="col-azioni">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tirocinio, studente_nome, studente_cognome, tutor_nome, tutor_cognome in tirocini %}
+                            <tr>
+                                <td>{{ tirocinio.id_tirocinio_diretto }}</td>
+                                <td>{{ studente_nome }} {{ studente_cognome }}</td>
+                                <td>
+                                    {% if tutor_nome %}
+                                        {{ tutor_nome }} {{ tutor_cognome }}
+                                    {% else %}
+                                        Nessun tutor
+                                    {% endif %}
+                                </td>
+                                <td>{{ tirocinio.data.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ tirocinio.ore }}</td>
+                                <td>{{ "%.2f"|format(tirocinio.cfu|float) if tirocinio.cfu else '' }}</td>
+                                <td>{{ tirocinio.descrizione_attivita }}</td>
+                                <td>
+                                    <a href="{{ url_for('edit_tirocinio_diretto', id=tirocinio.id_tirocinio_diretto) }}" class="btn-small blue waves-effect">
+                                        <i class="material-icons">edit</i>
+                                    </a>
+                                    <a href="{{ url_for('delete_tirocinio_diretto', id=tirocinio.id_tirocinio_diretto) }}" 
+                                       class="btn-small red waves-effect"
+                                       onclick="return confirm('Sei sicuro di voler eliminare questo tirocinio?')">
+                                        <i class="material-icons">delete</i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

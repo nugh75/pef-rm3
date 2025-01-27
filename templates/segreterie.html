@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Segreteria{% endblock %}
+
+{% block content %}
+    <h2>Area Segreteria</h2>
+    <p>Gestisci le operazioni relative alla segreteria.</p>
+
+    <div class="container">
+        <h3 class="center">Gestione Segreterie</h3>
+
+        <div class="row center" style="max-width: 1000px; margin: 2rem auto;">
+            <div class="col s12">
+                <div class="row" style="margin-bottom: 2rem;">
+                    <div class="col s12 m6 l4 offset-l4" style="margin-bottom: 1rem;">
+                        <a href="/lezioni" class="btn-large blue waves-effect waves-light" style="width: 100%;">
+                            <i class="material-icons left">book</i>Lezioni
+                        </a>
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom: 2rem;">
+                    <div class="col s12 m6" style="margin-bottom: 1rem;">
+                        <a href="/registro_tirocinio_indiretto" class="btn-large blue waves-effect waves-light" style="width: 100%;">
+                            <i class="material-icons left">assignment</i>Tirocinio Indiretto
+                        </a>
+                    </div>
+                    <div class="col s12 m6" style="margin-bottom: 1rem;">
+                        <a href="/registro_tirocinio_diretto" class="btn-large blue waves-effect waves-light" style="width: 100%;">
+                            <i class="material-icons left">work</i>Tirocinio Diretto
+                        </a>
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom: 2rem;">
+                    <div class="col s12 m6" style="margin-bottom: 1rem;">
+                        <a href="/scuole_accreditate" class="btn-large blue waves-effect waves-light" style="width: 100%;">
+                            <i class="material-icons left">school</i>Scuole Accreditate
+                        </a>
+                    </div>
+                    <div class="col s12 m6" style="margin-bottom: 1rem;">
+                        <a href="/lista_insegnanti" class="btn-large blue waves-effect waves-light" style="width: 100%;">
+                            <i class="material-icons left">person</i>Insegnanti
+                        </a>
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom: 2rem;">
+                    <div class="col s12 m6 offset-m3" style="margin-bottom: 1rem;">
+                        <a href="/tutor_coordinatori" class="btn-large blue waves-effect waves-light" style="width: 100%;">
+                            <i class="material-icons left">supervisor_account</i>Tutor Coordinatori
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

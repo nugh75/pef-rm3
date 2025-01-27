@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Tirocinio Indiretto</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="blue lighten-5">
+
+    <nav class="blue">
+        <div class="nav-wrapper container">
+            <a href="/" class="brand-logo">Aggiungi Tirocinio Indiretto</a>
+            <ul class="right">
+                <li><a href="/registro_tirocinio_indiretto"><i class="material-icons left">arrow_back</i>Registro Tirocini</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h3 class="center">Aggiungi Tirocinio Indiretto</h3>
+        <form method="POST" class="col s12">
+            <div class="row">
+                <div class="input-field col s6">
+                    <select id="id_studente" name="id_studente" required>
+                        <option value="" disabled selected>Seleziona Studente</option>
+                        {% for studente in studenti %}
+                        <option value="{{ studente.id_studente }}">{{ studente.nome }} {{ studente.cognome }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="id_studente">Studente</label>
+                </div>
+                <div class="input-field col s6">
+                    <select id="id_tutor_coordinatore" name="id_tutor_coordinatore">
+                        <option value="" disabled selected>Seleziona Tutor Coordinatore</option>
+                        {% for tutor in tutor_coordinatori %}
+                        <option value="{{ tutor.id_tutor_coordinatore }}">{{ tutor.nome }} {{ tutor.cognome }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="id_tutor_coordinatore">Tutor Coordinatore</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s6">
+                    <input id="data" name="data" type="date" required>
+                    <label for="data">Data</label>
+                </div>
+                <div class="input-field col s6">
+                    <input id="ore" name="ore" type="number" step="0.5" min="0" required onchange="calcolaCFU()">
+                    <label for="ore">Ore</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <textarea id="descrizione_attivita" name="descrizione_attivita" class="materialize-textarea"></textarea>
+                    <label for="descrizione_attivita">Descrizione Attività</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <p>CFU calcolati: <span id="cfu_calcolati">0.00</span></p>
+                    <p class="grey-text">1 CFU ogni 6 ore</p>
+                </div>
+            </div>
+            <button class="btn waves-effect waves-light blue" type="submit">
+                Aggiungi <i class="material-icons right">send</i>
+            </button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var selects = document.querySelectorAll('select');
+            M.FormSelect.init(selects);
+
+            var textareas = document.querySelectorAll('.materialize-textarea');
+            M.textareaAutoResize(textareas);
+        });
+
+        function calcolaCFU() {
+            var ore = parseFloat(document.getElementById('ore').value) || 0;
+            // 1 CFU ogni 6 ore
+            var cfu = (ore / 6).toFixed(2);
+            document.getElementById('cfu_calcolati').textContent = cfu;
+        }
+    </script>
+</body>
+</html>
