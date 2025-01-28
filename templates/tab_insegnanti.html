@@ -1,26 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista Insegnanti</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
-<body class="blue lighten-5">
+{% extends "base.html" %}
 
-    <nav class="blue">
-        <div class="nav-wrapper container">
-            <a href="/" class="brand-logo">Insegnanti</a>
-            <ul class="right">
-                <li><a href="/segreterie"><i class="material-icons left">arrow_back</i>Segreterie</a></li>
-                <li><a href="/"><i class="material-icons left">home</i>Home</a></li>
-                <li><a href="/add_insegnante"><i class="material-icons left">add</i>Aggiungi</a></li>
-            </ul>
-        </div>
-    </nav>
+{% block title %}Lista Insegnanti{% endblock %}
 
+{% block content %}
     <div class="container">
+        <div class="right-align" style="margin: 20px 0;">
+            <a href="{{ url_for('segreteria') }}" class="btn blue waves-effect waves-light">
+                <i class="material-icons left">arrow_back</i>Segreteria
+            </a>
+            <a href="{{ url_for('add_insegnante') }}" class="btn blue waves-effect waves-light">
+                <i class="material-icons left">add</i>Aggiungi
+            </a>
+        </div>
         <h3 class="center">Lista degli Insegnanti</h3>
         <table class="highlight">
             <thead>
@@ -46,8 +37,8 @@
                     <td>{{ insegnante.dipartimento.nome if insegnante.dipartimento else 'N/A' }}</td>
                     <td>{{ insegnante.ssd.nome_ssd if insegnante.ssd else 'N/A' }}</td>
                     <td>
-                        <a href="/edit_insegnante/{{ insegnante.id_insegnante }}" class="btn-small blue"><i class="material-icons">edit</i></a>
-                        <a href="/delete_insegnante/{{ insegnante.id_insegnante }}" class="btn-small red" onclick="return confirm('Sei sicuro di voler eliminare questo insegnante?')"><i class="material-icons">delete</i></a>
+                        <a href="{{ url_for('edit_insegnante', id=insegnante.id_insegnante) }}" class="btn-small blue"><i class="material-icons">edit</i></a>
+                        <a href="{{ url_for('delete_insegnante', id=insegnante.id_insegnante) }}" class="btn-small red" onclick="return confirm('Sei sicuro di voler eliminare questo insegnante?')"><i class="material-icons">delete</i></a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -56,5 +47,4 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,55 @@
+
+{% extends "base.html" %}
+
+{% block title %}Registro Tirocinio Indiretto{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h3 class="center">Registro Tirocinio Indiretto</h3>
+        <form method="GET" class="col s12">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="row">
+                <div class="input-field col s6">
+                    <input id="studente" name="studente" type="text" value="{{ studente }}">
+                    <label for="studente">Studente</label>
+                </div>
+                <div class="input-field col s6">
+                    <input id="tutor" name="tutor" type="text" value="{{ tutor }}">
+                    <label for="tutor">Tutor</label>
+                </div>
+            </div>
+            <button class="btn waves-effect waves-light blue" type="submit">
+                Filtra <i class="material-icons right">filter_list</i>
+            </button>
+        </form>
+        <table class="highlight responsive-table">
+            <thead>
+                <tr>
+                    <th>Studente</th>
+                    <th>Tutor</th>
+                    <th>Data</th>
+                    <th>Ore</th>
+                    <th>CFU</th>
+                    <th>Descrizione Attività</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tirocinio, studente_nome, studente_cognome, tutor_nome, tutor_cognome in tirocini %}
+                <tr>
+                    <td>{{ studente_nome }} {{ studente_cognome }}</td>
+                    <td>{{ tutor_nome }} {{ tutor_cognome }}</td>
+                    <td>{{ tirocinio.data }}</td>
+                    <td>{{ tirocinio.ore }}</td>
+                    <td>{{ tirocinio.cfu }}</td>
+                    <td>{{ tirocinio.descrizione_attivita }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="row">
+            <div class="col s12 right-align">
+                <h5>Totale CFU: {{ cfu_sum }}</h5>
+            </div>
+        </div>
+    </div>
+{% endblock %}

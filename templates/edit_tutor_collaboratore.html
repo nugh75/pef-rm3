@@ -1,63 +1,56 @@
 {% extends "base.html" %}
 
-{% block title %}Aggiungi Insegnante{% endblock %}
+{% block title %}Modifica Tutor Collaboratore{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="row">
         <div class="col s12">
-            <h3 class="center">Aggiungi Insegnante</h3>
+            <h3 class="center">Modifica Tutor Collaboratore</h3>
             <div class="card">
                 <div class="card-content">
                     <form method="POST">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="row">
                             <div class="input-field col s6">
-                                <input id="nome" name="nome" type="text" class="validate" required>
+                                <input id="nome" name="nome" type="text" class="validate" required value="{{ tutor.nome }}">
                                 <label for="nome">Nome</label>
                             </div>
                             <div class="input-field col s6">
-                                <input id="cognome" name="cognome" type="text" class="validate" required>
+                                <input id="cognome" name="cognome" type="text" class="validate" required value="{{ tutor.cognome }}">
                                 <label for="cognome">Cognome</label>
                             </div>
                         </div>
                         <div class="row">
                             <div class="input-field col s6">
-                                <input id="email" name="email" type="email" class="validate" required>
+                                <input id="email" name="email" type="email" class="validate" required value="{{ tutor.email }}">
                                 <label for="email">Email</label>
                             </div>
                             <div class="input-field col s6">
-                                <input id="telefono" name="telefono" type="tel" class="validate">
+                                <input id="telefono" name="telefono" type="tel" class="validate" value="{{ tutor.telefono }}">
                                 <label for="telefono">Telefono</label>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="input-field col s6">
+                            <div class="input-field col s12">
                                 <select name="dipartimento" required>
-                                    <option value="" disabled selected>Scegli il dipartimento</option>
+                                    <option value="" disabled>Scegli il dipartimento</option>
                                     {% for dipartimento in dipartimenti %}
-                                    <option value="{{ dipartimento.id }}">{{ dipartimento.nome }}</option>
+                                    <option value="{{ dipartimento.id }}" {% if dipartimento.id == tutor.dipartimento_id %}selected{% endif %}>
+                                        {{ dipartimento.nome }}
+                                    </option>
                                     {% endfor %}
                                 </select>
                                 <label>Dipartimento</label>
                             </div>
-                            <div class="input-field col s6">
-                                <select name="ssd" required>
-                                    <option value="" disabled selected>Scegli il SSD</option>
-                                    {% for ssd in ssd_list %}
-                                    <option value="{{ ssd.id_ssd }}">{{ ssd.nome_ssd }}</option>
-                                    {% endfor %}
-                                </select>
-                                <label>Settore Scientifico Disciplinare</label>
-                            </div>
                         </div>
                         <div class="row">
                             <div class="col s12 center-align">
-                                <a href="{{ url_for('insegnanti') }}" class="btn grey">
+                                <a href="{{ url_for('tutor_collaboratori') }}" class="btn grey">
                                     <i class="material-icons left">arrow_back</i>Indietro
                                 </a>
                                 <button class="btn blue waves-effect waves-light" type="submit">
-                                    <i class="material-icons left">save</i>Salva
+                                    <i class="material-icons left">save</i>Salva Modifiche
                                 </button>
                             </div>
                         </div>
@@ -72,6 +65,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     var selects = document.querySelectorAll('select');
     M.FormSelect.init(selects);
+    
+    // Attiva le label dei campi con valori pre-popolati
+    M.updateTextFields();
 });
 </script>
 {% endblock %}
