@@ -28,6 +28,7 @@
         }
         .col-id { width: 40px; }
         .col-studente { width: 200px; }
+        .col-scuola { width: 200px; }
         .col-tutor { width: 200px; }
         .col-data { width: 100px; }
         .col-ore { width: 80px; }
@@ -53,8 +54,8 @@
                         <label for="studente" class="active">Studente</label>
                     </div>
                     <div class="input-field col s4">
-                        <input id="tutor" name="tutor" type="text" value="{{ tutor }}">
-                        <label for="tutor" class="active">Tutor Coordinatore</label>
+                        <input id="scuola" name="scuola" type="text" value="{{ scuola }}">
+                        <label for="scuola" class="active">Scuola</label>
                     </div>
                     <div class="input-field col s4">
                         <button class="btn waves-effect waves-light blue" type="submit">
@@ -71,7 +72,8 @@
                             <tr>
                                 <th class="col-id">ID</th>
                                 <th class="col-studente">Studente</th>
-                                <th class="col-tutor">Tutor Coordinatore</th>
+                                <th class="col-scuola">Scuola</th>
+                                <th class="col-tutor">Tutor Esterno</th>
                                 <th class="col-data">Data</th>
                                 <th class="col-ore">Ore</th>
                                 <th class="col-cfu">CFU</th>
@@ -80,17 +82,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for tirocinio, studente_nome, studente_cognome, tutor_nome, tutor_cognome in tirocini %}
+                            {% for tirocinio, studente_nome, studente_cognome, scuola_nome in tirocini %}
                             <tr>
                                 <td>{{ tirocinio.id_tirocinio_diretto }}</td>
                                 <td>{{ studente_nome }} {{ studente_cognome }}</td>
-                                <td>
-                                    {% if tutor_nome %}
-                                        {{ tutor_nome }} {{ tutor_cognome }}
-                                    {% else %}
-                                        Nessun tutor
-                                    {% endif %}
-                                </td>
+                                <td>{{ scuola_nome }}</td>
+                                <td>{{ tirocinio.tutor_esterno }}</td>
                                 <td>{{ tirocinio.data.strftime('%d/%m/%Y') }}</td>
                                 <td>{{ tirocinio.ore }}</td>
                                 <td>{{ "%.2f"|format(tirocinio.cfu|float) if tirocinio.cfu else '' }}</td>

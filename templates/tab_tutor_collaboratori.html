@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Tabella Tutor Collaboratori{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h3 class="center">Lista dei Tutor Collaboratori</h3>
+        <form method="POST" action="/some-action">  <!--  This form might not be needed, see explanation below -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> <!-- This CSRF token might be redundant now -->
+            <div class="card">
+                <div class="card-content">
+                    <div class="row">
+                        <div class="col s12 right-align">
+                            <a href="{{ url_for('add_tutor_collaboratore') }}" class="btn waves-effect waves-light blue">
+                                Aggiungi Tutor Collaboratore <i class="material-icons right">add</i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="highlight responsive-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Cognome</th>
+                                    <th>Email</th>
+                                    <th>Telefono</th>
+                                    <th>Dipartimento</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tutor in tutor %}
+                                <tr>
+                                    <td>{{ tutor.id_tutor_collaboratore }}</td>
+                                    <td>{{ tutor.nome }}</td>
+                                    <td>{{ tutor.cognome }}</td>
+                                    <td>{{ tutor.email }}</td>
+                                    <td>{{ tutor.telefono }}</td>
+                                    <td>{{ tutor.dipartimento.nome }}</td>
+                                    <td>
+                                        <a href="{{ url_for('edit_tutor_collaboratore', id=tutor.id_tutor_collaboratore) }}" class="btn-small blue">
+                                            <i class="material-icons">edit</i>
+                                        </a>
+                                        <form method="POST" action="{{ url_for('delete_tutor_collaboratore', id=tutor.id_tutor_collaboratore) }}" style="display:inline;">
+                                            {{ form.csrf_token() }}  {# Correct way to render CSRF token from the form #}
+                                            <button type="submit" class="btn-small red" onclick="return confirm('Sei sicuro di voler eliminare questo tutor collaboratore?')">
+                                                <i class="material-icons">delete</i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

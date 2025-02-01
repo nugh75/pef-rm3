@@ -11,7 +11,7 @@
                     <select id="id_studente" name="id_studente" required>
                         <option value="" disabled>Seleziona Studente</option>
                         {% for studente in studenti %}
-                        <option value="{{ studente.id_studente }}" {% if studente.id_studente == tirocinio.id_studente %}selected{% endif %}>{{ studente.nome }} {{ studente.cognome }}</option>
+                        <option value="{{ studente.id_studente }}" {% if studente.id_studente == tirocinio.id_studente %}selected{% endif %}>{{ studente.nome }} {{ studente.cognome }} ({{ studente.email }})</option>
                         {% endfor %}
                     </select>
                     <label for="id_studente">Studente</label>
@@ -20,10 +20,16 @@
                     <select id="id_scuola" name="id_scuola" required>
                         <option value="" disabled>Seleziona Scuola</option>
                         {% for scuola in scuole %}
-                        <option value="{{ scuola.id_scuola }}" {% if scuola.id_scuola == tirocinio.id_scuola %}selected{% endif %}>{{ scuola.nome_scuola }}</option>
+                        <option value="{{ scuola.id_scuola }}" {% if scuola.id_scuola == tirocinio.id_scuola %}selected{% endif %}>{{ scuola.nome_scuola }} - {{ scuola.indirizzo }} (Ref: {{ scuola.referente }})</option>
                         {% endfor %}
                     </select>
                     <label for="id_scuola">Scuola</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="tutor_esterno" name="tutor_esterno" type="text" value="{{ tirocinio.tutor_esterno }}" required>
+                    <label for="tutor_esterno">Tutor Esterno</label>
                 </div>
             </div>
             <div class="row">
@@ -57,14 +63,32 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Inizializza i select di Materialize
             var selects = document.querySelectorAll('select');
-            M.FormSelect.init(selects);
+            var instances = M.FormSelect.init(selects);
 
             var textareas = document.querySelectorAll('.materialize-textarea');
             M.textareaAutoResize(textareas);
             
             // Attiva le label dei campi pre-popolati
             M.updateTextFields();
+
+            // Inizializza l'autocomplete per gli studenti
+            var studenteSelect = document.getElementById('id_studente');
+            studenteSelect.addEventListener('change', function() {
+                var selectedOption = this.options[this.selectedIndex];
+                var studenteId = selectedOption.value;
+                
+                // Ottieni il tutor esterno associato allo studente
+                fetch(`/get_tutor_esterno/${studenteId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.tutor_esterno) {
+                            document.getElementById('tutor_esterno').value = data.tutor_esterno;
+                            M.updateTextFields(); // Aggiorna le label di Materialize
+                        }
+                    });
+            });
         });
 
         function calcolaCFU() {

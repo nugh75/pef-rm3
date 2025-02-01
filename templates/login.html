@@ -4,13 +4,16 @@
 
 {% block content %}
     <h2>Login</h2>
-    <form method="POST">
-        <label for="email">Email:</label>
-        <input type="email" name="email" id="email" required>
-        
-        <label for="password">Password:</label>
-        <input type="password" name="password" id="password" required>
-        
-        <button type="submit">Accedi</button>
+    <form method="POST" action="{{ url_for('login') }}">
+        {{ form.csrf_token }}
+        <div class="form-group">
+            <label>{{ form.email.label }}</label>
+            {{ form.email(class="form-control") }}
+        </div>
+        <div class="form-group">
+            <label>{{ form.password.label }}</label>
+            {{ form.password(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
     </form>
 {% endblock %}
