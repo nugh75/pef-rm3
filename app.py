@@ -267,7 +267,7 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page or url_for('index'))
         flash('Email o password non validi.', 'error')
-    return render_template('login.html', form=form)
+    return render_template('main/login.html', form=form)
 
 @app.route('/logout')
 @login_required
@@ -366,7 +366,7 @@ def edit_user(id):
 @login_required
 @role_required(ROLE_SEGRETERIA)
 def segreteria():
-    return render_template('segreterie.html')
+    return render_template('main/segreterie.html')
 
 @app.route('/insegnanti')
 @login_required
@@ -479,7 +479,7 @@ def delete_scuola_accreditata(id):
 @role_required(ROLE_SEGRETERIA)
 def tutor_coordinatori():
     tutor = TutorCoordinatori.query.options(db.joinedload(TutorCoordinatori.dipartimento)).all()
-    return render_template('tab_tutor.html', tutor=tutor)
+    return render_template('tutor_coordinatori/tab_tutor_coordinatori.html', tutor=tutor)
 
 @app.route('/tutor_coordinatori/add', methods=['GET', 'POST'])
 @login_required
@@ -509,7 +509,7 @@ def edit_tutor_coordinatore(id):
         db.session.commit()
         flash('Tutor coordinatore aggiornato con successo!', 'success')
         return redirect(url_for('tutor_coordinatori'))
-    return render_template('edit_tutor.html', tutor=tutor, dipartimenti=dipartimenti)
+    return render_template('tutor_coordinatori/edit_tutor_coordinatore.html', tutor=tutor, dipartimenti=dipartimenti)
 
 @app.route('/tutor_coordinatori/delete/<int:id>', methods=['POST'])
 @login_required
@@ -527,7 +527,7 @@ def delete_tutor_coordinatore(id):
 def tutor_collaboratori():
     tutor = TutorCollaboratori.query.options(db.joinedload(TutorCollaboratori.dipartimento)).all()
     delete_form = DeleteTutorCollaboratoreForm()
-    return render_template('tab_tutor_collaboratori.html', tutor=tutor, form=delete_form)
+    return render_template('tutor_collaboratori/tab_tutor_collaboratori.html', tutor=tutor, form=delete_form)
 
 @app.route('/tutor_collaboratori/add', methods=['GET', 'POST'])
 @login_required
@@ -540,7 +540,7 @@ def add_tutor_collaboratore():
         db.session.commit()
         flash('Tutor collaboratore aggiunto con successo!', 'success')
         return redirect(url_for('tutor_collaboratori'))
-    return render_template('add_tutor_collaboratore.html', dipartimenti=dipartimenti)
+    return render_template('tutor_collaboratori/add_tutor_collaboratore.html', dipartimenti=dipartimenti)
 
 @app.route('/tutor_collaboratori/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -557,7 +557,7 @@ def edit_tutor_collaboratore(id):
         db.session.commit()
         flash('Tutor collaboratore aggiornato con successo!', 'success')
         return redirect(url_for('tutor_collaboratori'))
-    return render_template('edit_tutor_collaboratore.html', tutor=tutor, dipartimenti=dipartimenti)
+    return render_template('tutor_collaboratori/edit_tutor_collaboratore.html', tutor=tutor, dipartimenti=dipartimenti)
 
 @app.route('/tutor_collaboratori/delete/<int:id>', methods=['POST'])
 @login_required
@@ -846,7 +846,7 @@ def index():
         return redirect(url_for('area_tutor_coordinatore'))
     elif current_user.ruolo == ROLE_ADMIN:
         return redirect(url_for('admin_users'))
-    return render_template('index.html')
+    return render_template('main/index.html')
 
 @app.route('/area_studente')
 @login_required
@@ -876,7 +876,7 @@ def area_tutor_coordinatore():
         studente.ore_totali = totali['ore_tirocinio_indiretto']
         studente.cfu_totali = totali['cfu_tirocinio_indiretto']
     totali = calcola_totali_tutor(current_user.id)
-    return render_template('area_tutor_coordinatore.html', studenti=studenti, **totali)
+    return render_template('tutor_coordinatori/area_tutor_coordinatore.html', studenti=studenti, **totali)
 
 @app.route('/get_tutor_esterno/<int:id_studente>')
 @login_required
@@ -892,12 +892,12 @@ def force_logout():
 
 @app.errorhandler(404)
 def not_found_error(error):
-    return render_template('404.html'), 404
+    return render_template('error/404.html'), 404
 
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
-    return render_template('500.html'), 500
+    return render_template('error/500.html'), 500
 
 @app.cli.command('create-tables')
 def create_tables():
