@@ -197,6 +197,20 @@ class Studenti(db.Model):
     scuola_assegnata_id = db.Column(db.Integer, db.ForeignKey('ScuoleAccreditate.id_scuola'))
     tutor_esterno = db.Column(db.String(150))
 
+# Modifica il modello Presenze per corrispondere alla tabella esistente
+class Presenze(db.Model):
+    __tablename__ = 'RegistroPresenzeStudenti'
+    id_presenza = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_lezione = db.Column(db.Integer, db.ForeignKey('Lezioni.id_lezione', ondelete='CASCADE'), nullable=False)
+    id_studente = db.Column(db.Integer, db.ForeignKey('Studenti.id_studente', ondelete='CASCADE'), nullable=False)
+    presente = db.Column(db.Boolean, default=True, nullable=False)
+    ore = db.Column(db.Float, default=0)
+    cfu = db.Column(db.Float, default=0)
+    note = db.Column(db.String(255))
+    
+    lezione = db.relationship('Lezioni', backref='presenze')
+    studente = db.relationship('Studenti', backref='presenze')
+
 class DeleteTutorCollaboratoreForm(FlaskForm):
     pass
 
@@ -870,7 +884,8 @@ def calcola_totali_tutor(id_tutor):
 # --- Flask-Login ---
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    # Aggiornato per usare il nuovo metodo Session.get()
+    return db.session.get(User, int(user_id))
 
 # --- Route ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -1037,12 +1052,6 @@ def delete_insegnante(id):
     flash('Insegnante eliminato con successo!', 'success')
     return redirect(url_for('insegnanti'))
 
-# @app.route('/scuole_accreditate')
-# @login_required
-# @role_required(ROLE_SEGRETERIA)
-# def scuole_accreditate():
-#     scuole = ScuoleAccreditate.query.all()
-#     return render_template('tab_scuole.html', scuole=scuole)
 
 @app.route('/scuole_accreditate/add', methods=['GET', 'POST'])
 @login_required
@@ -1260,10 +1269,14 @@ def edit_tirocinio_indiretto(id):
 @login_required
 @role_required(ROLE_SEGRETERIA)
 def delete_tirocinio_indiretto(id):
-    tirocinio = RegistroPresenzeTirocinioIndiretto.query.get_or_404(id)
-    db.session.delete(tirocinio)
-    db.session.commit()
-    flash('Tirocinio indiretto eliminato con successo!', 'success')
+    try:
+        tirocinio = RegistroPresenzeTirocinioIndiretto.query.get_or_404(id)
+        db.session.delete(tirocinio)
+        db.session.commit()
+        flash('Tirocinio indiretto eliminato con successo!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Errore durante l\'eliminazione: {str(e)}', 'error')
     return redirect(url_for('registro_tirocinio_indiretto'))
 
 @app.route('/registro_tirocinio_diretto')
@@ -1342,10 +1355,14 @@ def edit_tirocinio_diretto(id):
 @login_required
 @role_required(ROLE_SEGRETERIA)
 def delete_tirocinio_diretto(id):
-    tirocinio = RegistroPresenzeTirocinioDiretto.query.get_or_404(id)
-    db.session.delete(tirocinio)
-    db.session.commit()
-    flash('Tirocinio diretto eliminato con successo!', 'success')
+    try:
+        tirocinio = RegistroPresenzeTirocinioDiretto.query.get_or_404(id)
+        db.session.delete(tirocinio)
+        db.session.commit()
+        flash('Tirocinio diretto eliminato con successo!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Errore durante l\'eliminazione: {str(e)}', 'error')
     return redirect(url_for('registro_tirocinio_diretto'))
 
 @app.route('/lezioni')
@@ -1450,6 +1467,97 @@ def delete_lezione(id):
     flash('Lezione eliminata con successo!', 'success')
     return redirect(url_for('lezioni'))
 
+@app.route('/presenze')
+@login_required
+@role_required(ROLE_SEGRETERIA)
+def lista_presenze():
+    studenti = Studenti.query.all()
+    lezioni = Lezioni.query.all()
+    dipartimenti = Dipartimenti.query.all()
+    classi_concorso = ClassiConcorso.query.all()
+    
+    query = Presenze.query.join(Presenze.lezione).join(Presenze.studente)
+    
+    # Filtri
+    if request.args.get('studente'):
+        query = query.filter(Presenze.id_studente == request.args.get('studente'))
+    if request.args.get('lezione'):
+        query = query.filter(Presenze.id_lezione == request.args.get('lezione'))
+    if request.args.get('data'):
+        query = query.filter(Lezioni.data == datetime.strptime(request.args.get('data'), '%Y-%m-%d').date())
+    if request.args.get('dipartimento'):
+        query = query.join(Lezioni.dipartimenti).filter(Dipartimenti.id == request.args.get('dipartimento'))
+    if request.args.get('classe_concorso'):
+        query = query.join(Lezioni.classi_concorso).filter(ClassiConcorso.id_classe == request.args.get('classe_concorso'))
+
+    presenze = query.all()
+    return render_template('main/lista_presenze.html', 
+                         presenze=presenze,
+                         studenti=studenti,
+                         lezioni=lezioni,
+                         dipartimenti=dipartimenti,
+                         classi_concorso=classi_concorso)
+
+@app.route('/inserisci_presenza', methods=['GET', 'POST'])
+@login_required
+@role_required(ROLE_SEGRETERIA)
+def inserisci_presenza():
+    if request.method == 'POST':
+        try:
+            lezione_id = request.form['id_lezione']
+            studenti_ids = request.form.getlist('id_studenti')
+            
+            # Recupera la lezione per calcolare ore e CFU
+            lezione = Lezioni.query.get_or_404(lezione_id)
+            
+            # Calcola ore e CFU dalla durata della lezione
+            durata = lezione.durata
+            ore = durata.hour + durata.minute/60 if durata else 0
+            cfu = float(lezione.cfu) if lezione.cfu else 0
+            
+            for studente_id in studenti_ids:
+                # Verifica se esiste già una presenza per questo studente in questa lezione
+                presenza_esistente = Presenze.query.filter_by(
+                    id_lezione=lezione_id,
+                    id_studente=studente_id
+                ).first()
+                
+                if not presenza_esistente:
+                    presenza = Presenze(
+                        id_lezione=lezione_id,
+                        id_studente=studente_id,
+                        presente=True,
+                        ore=ore,
+                        cfu=cfu
+                    )
+                    db.session.add(presenza)
+            
+            db.session.commit()
+            flash('Presenze registrate con successo!', 'success')
+            return redirect(url_for('lista_presenze'))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Errore durante la registrazione delle presenze: {str(e)}')
+            flash(f'Errore durante la registrazione delle presenze: {str(e)}', 'error')
+    
+    lezioni = Lezioni.query.all()
+    studenti = Studenti.query.all()
+    return render_template('main/inserisci_presenza.html', lezioni=lezioni, studenti=studenti)
+
+@app.route('/elimina_presenza/<int:id>', methods=['POST'])
+@login_required
+@role_required(ROLE_SEGRETERIA)
+def elimina_presenza(id):
+    try:
+        presenza = Presenze.query.get_or_404(id)
+        db.session.delete(presenza)
+        db.session.commit()
+        flash('Presenza eliminata con successo!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Errore durante l\'eliminazione: {str(e)}', 'error')
+    return redirect(url_for('lista_presenze'))
+
 @app.route('/')
 @login_required
 def index():
@@ -1479,7 +1587,7 @@ def area_studente():
 @login_required
 @role_required(ROLE_PROFESSORE)
 def area_professore():
-    lezioni = Lezioni.query.filter_by(id_insegnante=current_user.id).all()
+    lezioni = Lezioni.query.filter_by(id_insegnante(current_user.id)).all()
     totali = calcola_totali_professore(current_user.id)
     return render_template('area_professore.html', lezioni=lezioni, **totali)
 

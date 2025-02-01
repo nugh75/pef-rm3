@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2>Registro Presenze Studenti</h2>
+
+    <!-- Filtri -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filtri</h5>
+        </div>
+        <div class="card-body" style="padding: 20px;">  <!-- Aggiunto padding -->
+            <form method="get" action="{{ url_for('lista_presenze') }}" class="row g-4">  <!-- Aumentato spacing con g-4 -->
+                <div class="col-md-3 mb-3">  <!-- Aggiunto margin-bottom -->
+                    <label for="studente" class="form-label">Studente</label>
+                    <select class="form-select" id="studente" name="studente" style="width: 100%;">
+                        <option value="">Tutti gli studenti</option>
+                        {% for s in studenti %}
+                        <option value="{{ s.id_studente }}" {% if request.args.get('studente')|int == s.id_studente %}selected{% endif %}>
+                            {{ s.cognome }} {{ s.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="lezione" class="form-label">Lezione</label>
+                    <select class="form-select" id="lezione" name="lezione" style="width: 100%;">
+                        <option value="">Tutte le lezioni</option>
+                        {% for l in lezioni %}
+                        <option value="{{ l.id_lezione }}" {% if request.args.get('lezione')|int == l.id_lezione %}selected{% endif %}>
+                            {{ l.nome_lezione }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label for="data" class="form-label">Data</label>
+                    <input type="date" class="form-control" id="data" name="data" 
+                           value="{{ request.args.get('data', '') }}">
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label for="dipartimento" class="form-label">Dipartimento</label>
+                    <select class="form-select" id="dipartimento" name="dipartimento" style="width: 100%;">
+                        <option value="">Tutti i dipartimenti</option>
+                        {% for d in dipartimenti %}
+                        <option value="{{ d.id }}" {% if request.args.get('dipartimento')|int == d.id %}selected{% endif %}>
+                            {{ d.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label for="classe_concorso" class="form-label">Classe di Concorso</label>
+                    <select class="form-select" id="classe_concorso" name="classe_concorso" style="width: 100%;">
+                        <option value="">Tutte le classi</option>
+                        {% for c in classi_concorso %}
+                        <option value="{{ c.id_classe }}" {% if request.args.get('classe_concorso')|int == c.id_classe %}selected{% endif %}>
+                            {{ c.nome_classe }} - {{ c.denominazione_classe }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Applica Filtri</button>
+                    <a href="{{ url_for('lista_presenze') }}" class="btn btn-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabella Presenze con larghezza aumentata -->
+    <div class="table-responsive" style="margin: 0 -15px;">  <!-- Margini negativi per compensare il container -->
+        <table class="table table-striped table-hover" style="min-width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Data</th>
+                    <th style="width: 20%;">Lezione</th>
+                    <th style="width: 15%;">Studente</th>
+                    <th style="width: 15%;">Insegnante</th>
+                    <th style="width: 10%;">Dipartimento</th>
+                    <th style="width: 10%;">Classe</th>
+                    <th style="width: 10%;">Percorso</th>
+                    <th style="width: 5%;">Stato</th>
+                    <th style="width: 5%;">Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for presenza in presenze %}
+                <tr>
+                    <td>{{ presenza.lezione.data.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ presenza.lezione.nome_lezione }}</td>
+                    <td>{{ presenza.studente.cognome }} {{ presenza.studente.nome }}</td>
+                    <td>
+                        {% if presenza.lezione.insegnante %}
+                        {{ presenza.lezione.insegnante.cognome }} {{ presenza.lezione.insegnante.nome }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% for dip in presenza.lezione.dipartimenti %}
+                        {{ dip.nome }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for classe in presenza.lezione.classi_concorso %}
+                        {{ classe.nome_classe }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for percorso in presenza.lezione.percorsi %}
+                        {{ percorso.nome_percorso }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% if presenza.presente %}
+                        <span class="badge bg-success">Presente</span>
+                        {% else %}
+                        <span class="badge bg-danger">Assente</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form action="{{ url_for('elimina_presenza', id=presenza.id_presenza) }}" method="POST" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-small red waves-effect" onclick="return confirm('Sei sicuro di voler eliminare questa presenza?');">
+                                <i class="material-icons">delete</i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="text-center">Nessuna presenza trovata</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal di conferma eliminazione -->
+<div class="modal fade" id="modalConfermaEliminazione" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Conferma eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Sei sicuro di voler eliminare questa presenza?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <form id="formEliminazione" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">Elimina</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confermaEliminazione(id) {
+    const modal = new bootstrap.Modal(document.getElementById('modalConfermaEliminazione'));
+    document.getElementById('formEliminazione').action = "{{ url_for('elimina_presenza', id=0) }}".replace('0', id);
+    modal.show();
+}
+
+// Inizializza select2 per una migliore esperienza utente
+$(document).ready(function() {
+    $('#studente, #lezione, #dipartimento, #classe_concorso').select2({
+        width: '100%'
+    });
+});
+</script>
+
+<style>
+    /* Stili aggiuntivi per migliorare l'aspetto */
+    .card {
+        margin-bottom: 2rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 1rem;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 500;
+    }
+    
+    /* Migliora la spaziatura dei pulsanti */
+    .btn {
+        margin-right: 0.5rem;
+    }
+    
+    /* Migliora l'aspetto delle select */
+    .form-select {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

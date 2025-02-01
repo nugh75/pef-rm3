@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Studente{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Filtri temporali -->
+    <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <div class="row">
+                        <div class="input-field col s4">
+                            <input type="date" id="data_inizio" name="data_inizio">
+                            <label for="data_inizio">Data Inizio</label>
+                        </div>
+                        <div class="input-field col s4">
+                            <input type="date" id="data_fine" name="data_fine">
+                            <label for="data_fine">Data Fine</label>
+                        </div>
+                        <div class="input-field col s4">
+                            <button class="btn waves-effect waves-light blue" onclick="applicaFiltri()">
+                                Filtra <i class="material-icons right">filter_list</i>
+                            </button>
+                            <a class="btn waves-effect waves-light green" onclick="esportaPDF()">
+                                Esporta PDF <i class="material-icons right">picture_as_pdf</i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Riepilogo Generale -->
+    <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title">Riepilogo Generale</span>
+                    <div class="row">
+                        <div class="col s3">
+                            <div class="center">
+                                <h4>{{ totale_ore_lezioni }}</h4>
+                                <p>Ore di Lezione</p>
+                            </div>
+                        </div>
+                        <div class="col s3">
+                            <div class="center">
+                                <h4>{{ totale_ore_tirocinio_diretto }}</h4>
+                                <p>Ore Tirocinio Diretto</p>
+                            </div>
+                        </div>
+                        <div class="col s3">
+                            <div class="center">
+                                <h4>{{ totale_ore_tirocinio_indiretto }}</h4>
+                                <p>Ore Tirocinio Indiretto</p>
+                            </div>
+                        </div>
+                        <div class="col s3">
+                            <div class="center">
+                                <h4>{{ totale_cfu }}</h4>
+                                <p>CFU Totali</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col s12">
+                            <div id="graficoProgresso" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lezioni -->
+    <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title">Lezioni Frequentate</span>
+                    <table class="striped">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Nome Lezione</th>
+                                <th>Insegnante</th>
+                                <th>Orario</th>
+                                <th>Durata</th>
+                                <th>CFU</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lezione in lezioni %}
+                            <tr>
+                                <td>{{ lezione.data.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ lezione.nome_lezione }}</td>
+                                <td>{{ lezione.insegnante.cognome }}</td>
+                                <td>{{ lezione.orario_inizio.strftime('%H:%M') }} - {{ lezione.orario_fine.strftime('%H:%M') }}</td>
+                                <td>{{ lezione.durata }}</td>
+                                <td>{{ "%.2f"|format(lezione.cfu|float) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tirocinio Diretto -->
+    <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title">Tirocinio Diretto</span>
+                    <div class="row">
+                        <div class="col s12">
+                            <div id="graficoTirocinioDiretto" style="height: 200px;"></div>
+                        </div>
+                    </div>
+                    <table class="striped">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Scuola</th>
+                                <th>Tutor</th>
+                                <th>Ore</th>
+                                <th>CFU</th>
+                                <th>Attività</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tirocinio in tirocini_diretti %}
+                            <tr>
+                                <td>{{ tirocinio.data.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ tirocinio.scuola.nome_scuola }}</td>
+                                <td>{{ tirocinio.tutor_esterno }}</td>
+                                <td>{{ tirocinio.ore }}</td>
+                                <td>{{ "%.2f"|format(tirocinio.cfu|float) }}</td>
+                                <td>{{ tirocinio.descrizione_attivita }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tirocinio Indiretto -->
+    <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title">Tirocinio Indiretto</span>
+                    <div class="row">
+                        <div class="col s12">
+                            <div id="graficoTirocinioIndiretto" style="height: 200px;"></div>
+                        </div>
+                    </div>
+                    <table class="striped">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Tutor Coordinatore</th>
+                                <th>Ore</th>
+                                <th>CFU</th>
+                                <th>Attività</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tirocinio in tirocini_indiretti %}
+                            <tr>
+                                <td>{{ tirocinio.data.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ tirocinio.tutor_coordinatore.cognome }}</td>
+                                <td>{{ tirocinio.ore }}</td>
+                                <td>{{ "%.2f"|format(tirocinio.cfu|float) }}</td>
+                                <td>{{ tirocinio.descrizione_attivita }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Includi Chart.js per i grafici -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inizializza i grafici
+    inizializzaGrafici();
+});
+
+function inizializzaGrafici() {
+    // Grafico progresso generale
+    const ctxProgresso = document.getElementById('graficoProgresso').getContext('2d');
+    new Chart(ctxProgresso, {
+        type: 'line',
+        data: {
+            labels: {{ date_labels|tojson }},
+            datasets: [{
+                label: 'CFU Accumulati',
+                data: {{ cfu_progress|tojson }},
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Grafico tirocinio diretto
+    const ctxDiretto = document.getElementById('graficoTirocinioDiretto').getContext('2d');
+    new Chart(ctxDiretto, {
+        type: 'bar',
+        data: {
+            labels: ['Ore Completate', 'Ore Rimanenti'],
+            datasets: [{
+                data: [{{ ore_tirocinio_diretto }}, {{ ore_tirocinio_diretto_rimanenti }}],
+                backgroundColor: ['rgb(54, 162, 235)', 'rgb(211, 211, 211)']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Grafico tirocinio indiretto
+    const ctxIndiretto = document.getElementById('graficoTirocinioIndiretto').getContext('2d');
+    new Chart(ctxIndiretto, {
+        type: 'bar',
+        data: {
+            labels: ['Ore Completate', 'Ore Rimanenti'],
+            datasets: [{
+                data: [{{ ore_tirocinio_indiretto }}, {{ ore_tirocinio_indiretto_rimanenti }}],
+                backgroundColor: ['rgb(75, 192, 192)', 'rgb(211, 211, 211)']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function applicaFiltri() {
+    const dataInizio = document.getElementById('data_inizio').value;
+    const dataFine = document.getElementById('data_fine').value;
+    window.location.href = `{{ url_for('dashboard_studente') }}?data_inizio=${dataInizio}&data_fine=${dataFine}`;
+}
+
+function esportaPDF() {
+    const element = document.querySelector('.container-fluid');
+    const opt = {
+        margin: 1,
+        filename: 'report_attivita.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+}
+</script>
+{% endblock %}

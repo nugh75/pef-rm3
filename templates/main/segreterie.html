@@ -1,90 +1,124 @@
 {% extends "base.html" %}
 
-{% block title %}Segreteria{% endblock %}
+{% block title %}Area Segreteria{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h3 class="center">Gestione Segreterie</h3>
-
-        <div class="row" style="max-width: 1200px; margin: 2rem auto;">
-            <!-- Sezione Didattica -->
-            <div class="col s12 m6">
-                <div class="card blue lighten-5">
-                    <div class="card-content">
-                        <span class="card-title center-align"><i class="material-icons">school</i> Didattica</span>
-                        <div class="row" style="margin-top: 20px;">
-                            <div class="col s12" style="margin-bottom: 1rem;">
-                                <a href="{{ url_for('lezioni') }}" class="btn blue waves-effect waves-light" style="width: 100%;">
-                                    <i class="material-icons left">book</i>Lezioni
-                                </a>
-                            </div>
-                            <div class="col s12">
-                                <a href="{{ url_for('insegnanti') }}" class="btn blue waves-effect waves-light" style="width: 100%;">
-                                    <i class="material-icons left">person</i>Insegnanti
-                                </a>
-                            </div>
-                        </div>
+<div class="container">
+    <h2 class="header center blue-text">Area Segreteria</h2>
+    
+    <div class="row">
+        <!-- Gestione Lezioni -->
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title"><i class="material-icons left">school</i>Gestione Lezioni</span>
+                    <div class="collection">
+                        <a href="{{ url_for('lezioni') }}" class="collection-item">
+                            <i class="material-icons left">list</i>Elenco Lezioni
+                        </a>
+                        <a href="{{ url_for('lista_presenze') }}" class="collection-item">
+                            <i class="material-icons left">check_circle</i>Registro Presenze Lezioni
+                        </a>
+                        <a href="{{ url_for('inserisci_presenza') }}" class="collection-item">
+                            <i class="material-icons left">add_circle</i>Inserisci Presenze
+                        </a>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Sezione Tirocini -->
-            <div class="col s12 m6">
-                <div class="card blue lighten-5">
-                    <div class="card-content">
-                        <span class="card-title center-align"><i class="material-icons">work</i> Tirocini</span>
-                        <div class="row" style="margin-top: 20px;">
-                            <div class="col s12" style="margin-bottom: 1rem;">
-                                <a href="{{ url_for('registro_tirocinio_indiretto') }}" class="btn blue waves-effect waves-light" style="width: 100%;">
-                                    <i class="material-icons left">assignment</i>Tirocinio Indiretto
-                                </a>
-                            </div>
-                            <div class="col s12">
-                                <a href="{{ url_for('registro_tirocinio_diretto') }}" class="btn blue waves-effect waves-light" style="width: 100%;">
-                                    <i class="material-icons left">work</i>Tirocinio Diretto
-                                </a>
-                            </div>
-                        </div>
+        <!-- Gestione Tirocini -->
+        <div class="col s12 m6">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title"><i class="material-icons left">work</i>Gestione Tirocini</span>
+                    <div class="collection">
+                        <a href="{{ url_for('registro_tirocinio_diretto') }}" class="collection-item">
+                            <i class="material-icons left">domain</i>Registro Tirocinio Diretto
+                        </a>
+                        <a href="{{ url_for('registro_tirocinio_indiretto') }}" class="collection-item">
+                            <i class="material-icons left">school</i>Registro Tirocinio Indiretto
+                        </a>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Sezione Personale -->
-            <div class="col s12 m6">
-                <div class="card blue lighten-5">
-                    <div class="card-content">
-                        <span class="card-title center-align"><i class="material-icons">people</i> Personale</span>
-                        <div class="row" style="margin-top: 20px;">
-                            <div class="col s12" style="margin-bottom: 1rem;">
-                                <a href="{{ url_for('tutor_coordinatori') }}" class="btn blue waves-effect waves-light" style="width: 100%;">
-                                    <i class="material-icons left">supervisor_account</i>Tutor Coordinatori
-                                </a>
-                            </div>
-                            <div class="col s12">
-                                <a href="{{ url_for('tutor_collaboratori') }}" class="btn blue waves-effect waves-light" style="width: 100%;">
-                                    <i class="material-icons left">group</i>Tutor Collaboratori
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sezione Strutture -->
-            <div class="col s12 m6">
-                <div class="card blue lighten-5">
-                    <div class="card-content">
-                        <span class="card-title center-align"><i class="material-icons">domain</i> Strutture</span>
-                        <div class="row" style="margin-top: 20px;">
-                            <div class="col s12">
-                                <a href="{{ url_for('scuole_accreditate') }}" class="btn blue waves-effect waves-light" style="width: 100%;">
-                                    <i class="material-icons left">school</i>Scuole Accreditate
-                                </a>
-                            </div>
-                        </div>
+        <!-- Gestione Personale -->
+        <div class="col s12 m6">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title"><i class="material-icons left">people</i>Gestione Personale</span>
+                    <div class="collection">
+                        <a href="{{ url_for('insegnanti') }}" class="collection-item">
+                            <i class="material-icons left">person</i>Gestione Insegnanti
+                        </a>
+                        <a href="{{ url_for('tutor_coordinatori') }}" class="collection-item">
+                            <i class="material-icons left">supervisor_account</i>Gestione Tutor Coordinatori
+                        </a>
+                        <a href="{{ url_for('tutor_collaboratori') }}" class="collection-item">
+                            <i class="material-icons left">group</i>Gestione Tutor Collaboratori
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Gestione Scuole -->
+    <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title"><i class="material-icons left">location_city</i>Gestione Scuole</span>
+                    <div class="collection">
+                        <a href="{{ url_for('scuole_accreditate') }}" class="collection-item">
+                            <i class="material-icons left">business</i>Gestione Scuole Accreditate
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    margin: 1rem 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.card-title {
+    font-size: 1.5rem !important;
+    font-weight: 500 !important;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+    margin-bottom: 15px !important;
+}
+
+.collection {
+    border: none;
+    margin: 0;
+}
+
+.collection .collection-item {
+    border-radius: 4px;
+    margin: 5px 0;
+    transition: background-color 0.3s;
+}
+
+.collection .collection-item:hover {
+    background-color: #f5f5f5;
+}
+
+.material-icons {
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+.card-title .material-icons {
+    font-size: 2rem;
+}
+</style>
 {% endblock %}

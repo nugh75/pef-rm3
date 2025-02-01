@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Inserisci Presenze</h2>
+    <form action="{{ url_for('inserisci_presenza') }}" method="post" class="needs-validation" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group mb-3">
+            <label for="id_lezione">Lezione:</label>
+            <select class="form-control" id="id_lezione" name="id_lezione" required>
+                <option value="">Seleziona una lezione</option>
+                {% for lezione in lezioni %}
+                <option value="{{ lezione.id_lezione }}">
+                    {{ lezione.nome_lezione }} ({{ lezione.data.strftime('%d/%m/%Y') }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="id_studenti">Studenti Presenti:</label>
+            <select class="form-control" id="id_studenti" name="id_studenti" multiple required>
+                {% for studente in studenti %}
+                <option value="{{ studente.id_studente }}">
+                    {{ studente.cognome }} {{ studente.nome }}
+                </option>
+                {% endfor %}
+            </select>
+            <small class="form-text text-muted">Tieni premuto Ctrl (Cmd su Mac) per selezionare più studenti</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Registra Presenze</button>
+    </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#id_studenti').select2({
+        placeholder: 'Seleziona gli studenti presenti',
+        width: '100%'
+    });
+});
+</script>
+{% endblock %}
