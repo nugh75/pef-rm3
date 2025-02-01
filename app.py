@@ -860,7 +860,7 @@ def calcola_totali_studente(id_studente):
     }
 
 def calcola_totali_professore(id_professore):
-    lezioni = Lezioni.query.filter_by(id_insegnante=id_professore).all()
+    lezioni = Lezioni.query.filter_by(id_insegnante(id_professore)).all()
     numero_lezioni = len(lezioni)
     ore_totali = sum(l.durata.hour + l.durata.minute/60 if l.durata else 0 for l in lezioni)
     cfu_totali = sum(float(l.cfu) if l.cfu else 0 for l in lezioni)
@@ -871,7 +871,7 @@ def calcola_totali_professore(id_professore):
     }
 
 def calcola_totali_tutor(id_tutor):
-    tirocini = RegistroPresenzeTirocinioIndiretto.query.filter_by(id_tutor_coordinatore=id_tutor).all()
+    tirocini = RegistroPresenzeTirocinioIndiretto.query.filter_by(id_tutor_coordinatore(id_tutor)).all()
     studenti = set(t.id_studente for t in tirocini)
     ore_totali = sum(t.ore for t in tirocini)
     cfu_totali = sum(t.cfu for t in tirocini)
@@ -1489,14 +1489,20 @@ def lista_presenze():
         query = query.join(Lezioni.dipartimenti).filter(Dipartimenti.id == request.args.get('dipartimento'))
     if request.args.get('classe_concorso'):
         query = query.join(Lezioni.classi_concorso).filter(ClassiConcorso.id_classe == request.args.get('classe_concorso'))
+    if request.args.get('percorso'):
+        query = query.join(Lezioni.percorsi).filter(Percorsi.id_percorso == request.args.get('percorso'))
 
     presenze = query.all()
+    
+    percorsi = Percorsi.query.order_by(Percorsi.nome_percorso).all()
+    
     return render_template('main/lista_presenze.html', 
                          presenze=presenze,
                          studenti=studenti,
                          lezioni=lezioni,
                          dipartimenti=dipartimenti,
-                         classi_concorso=classi_concorso)
+                         classi_concorso=classi_concorso,
+                         percorsi=percorsi)  # Aggiunto percorsi al context
 
 @app.route('/inserisci_presenza', methods=['GET', 'POST'])
 @login_required

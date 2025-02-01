@@ -31,8 +31,9 @@
         .col-dipartimento { width: 10%; }
         .col-classe { width: 10%; }
         .col-percorso { width: 10%; }
-        .col-stato { width: 5%; }
         .col-azioni { width: 5%; }
+        .col-ore { width: 5%; }
+        .col-cfu { width: 5%; }
     </style>
 
     <div class="container">
@@ -47,7 +48,7 @@
                     </div>
                 </div>
                 <form method="GET" class="row">
-                    <div class="input-field col s3">
+                    <div class="input-field col s4">
                         <select id="studente" name="studente">
                             <option value="">Tutti gli studenti</option>
                             {% for s in studenti %}
@@ -58,7 +59,7 @@
                         </select>
                         <label>Studente</label>
                     </div>
-                    <div class="input-field col s3">
+                    <div class="input-field col s4">
                         <select id="lezione" name="lezione">
                             <option value="">Tutte le lezioni</option>
                             {% for l in lezioni %}
@@ -69,11 +70,46 @@
                         </select>
                         <label>Lezione</label>
                     </div>
-                    <div class="input-field col s3">
+                    <div class="input-field col s4">
                         <input type="date" id="data" name="data" value="{{ request.args.get('data', '') }}">
                         <label for="data" class="active">Data</label>
                     </div>
-                    <div class="input-field col s3">
+
+                    <!-- Nuovi filtri -->
+                    <div class="input-field col s4">
+                        <select id="dipartimento" name="dipartimento">
+                            <option value="">Tutti i dipartimenti</option>
+                            {% for d in dipartimenti %}
+                            <option value="{{ d.id }}" {% if request.args.get('dipartimento')|int == d.id %}selected{% endif %}>
+                                {{ d.nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <label>Dipartimento</label>
+                    </div>
+                    <div class="input-field col s4">
+                        <select id="classe_concorso" name="classe_concorso">
+                            <option value="">Tutte le classi</option>
+                            {% for c in classi_concorso %}
+                            <option value="{{ c.id_classe }}" {% if request.args.get('classe_concorso')|int == c.id_classe %}selected{% endif %}>
+                                {{ c.nome_classe }} - {{ c.denominazione_classe }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <label>Classe di Concorso</label>
+                    </div>
+                    <div class="input-field col s4">
+                        <select id="percorso" name="percorso">
+                            <option value="">Tutti i percorsi</option>
+                            {% for p in percorsi %}
+                            <option value="{{ p.id_percorso }}" {% if request.args.get('percorso')|int == p.id_percorso %}selected{% endif %}>
+                                {{ p.nome_percorso }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <label>Percorso</label>
+                    </div>
+                    <div class="input-field col s4">
                         <button class="btn waves-effect waves-light blue" type="submit">
                             Filtra <i class="material-icons right">filter_list</i>
                         </button>
@@ -82,6 +118,15 @@
                         </a>
                     </div>
                 </form>
+
+                <!-- Totale CFU -->
+                <div class="right-align" style="margin-bottom: 20px;">
+                    {% set total = namespace(cfu=0) %}
+                    {% for presenza in presenze %}
+                        {% set total.cfu = total.cfu + presenza.cfu|float if presenza.cfu else total.cfu %}
+                    {% endfor %}
+                    <p>Totale CFU: {{ "%.2f"|format(total.cfu) }}</p>
+                </div>
                 
                 <div class="table-container">
                     <table class="highlight responsive-table">
@@ -94,7 +139,8 @@
                                 <th class="col-dipartimento">Dipartimento</th>
                                 <th class="col-classe">Classe</th>
                                 <th class="col-percorso">Percorso</th>
-                                <th class="col-stato">Stato</th>
+                                <th class="col-ore">Ore</th>
+                                <th class="col-cfu">CFU</th>
                                 <th class="col-azioni">Azioni</th>
                             </tr>
                         </thead>
@@ -124,13 +170,8 @@
                                     {{ percorso.nome_percorso }}{% if not loop.last %}, {% endif %}
                                     {% endfor %}
                                 </td>
-                                <td>
-                                    {% if presenza.presente %}
-                                    <span class="badge green white-text">Presente</span>
-                                    {% else %}
-                                    <span class="badge red white-text">Assente</span>
-                                    {% endif %}
-                                </td>
+                                <td>{{ presenza.ore }}</td>
+                                <td>{{ "%.2f"|format(presenza.cfu|float) if presenza.cfu else '' }}</td>
                                 <td>
                                     <form action="{{ url_for('elimina_presenza', id=presenza.id_presenza) }}" method="POST" style="display: inline;">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -142,7 +183,7 @@
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="9" class="center">Nessuna presenza trovata</td>
+                                <td colspan="10" class="center">Nessuna presenza trovata</td>
                             </tr>
                             {% endfor %}
                         </tbody>
