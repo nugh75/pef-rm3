@@ -4,60 +4,67 @@
 
 {% block content %}
 <div class="container">
-    <h2 class="header center blue-text">Area Segreteria</h2>
+    <!-- Rimozione dell'header con icona e titolo -->
     
+    <!-- Gestione Lezioni -->
     <div class="row">
-        <!-- Gestione Lezioni -->
         <div class="col s12">
-            <div class="card">
+            <div class="card blue lighten-5 z-depth-2 hoverable">
                 <div class="card-content">
-                    <span class="card-title"><i class="material-icons left">school</i>Gestione Lezioni</span>
+                    <span class="card-title blue-text text-darken-2">
+                        <i class="material-icons left medium">school</i>Gestione Lezioni
+                    </span>
                     <div class="collection">
-                        <a href="{{ url_for('lezioni') }}" class="collection-item">
-                            <i class="material-icons left">list</i>Elenco Lezioni
+                        <a href="{{ url_for('lezioni') }}" class="collection-item waves-effect waves-light">
+                            <i class="material-icons left blue-text">list</i>Elenco Lezioni
                         </a>
-                        <a href="{{ url_for('lista_presenze') }}" class="collection-item">
-                            <i class="material-icons left">check_circle</i>Registro Presenze Lezioni
-                        </a>
-                        <a href="{{ url_for('inserisci_presenza') }}" class="collection-item">
-                            <i class="material-icons left">add_circle</i>Inserisci Presenze
+                        <a href="{{ url_for('lista_presenze') }}" class="collection-item waves-effect waves-light">
+                            <i class="material-icons left blue-text">check_circle</i>Registro Presenze Lezioni
                         </a>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Gestione Tirocini -->
-        <div class="col s12 m6">
-            <div class="card">
+    <!-- Gestione Tirocini -->
+    <div class="row">
+        <div class="col s12">
+            <div class="card blue lighten-5 z-depth-2 hoverable">
                 <div class="card-content">
-                    <span class="card-title"><i class="material-icons left">work</i>Gestione Tirocini</span>
+                    <span class="card-title blue-text text-darken-2">
+                        <i class="material-icons left medium">work</i>Gestione Tirocini
+                    </span>
                     <div class="collection">
-                        <a href="{{ url_for('registro_tirocinio_diretto') }}" class="collection-item">
-                            <i class="material-icons left">domain</i>Registro Tirocinio Diretto
+                        <a href="{{ url_for('registro_tirocinio_diretto') }}" class="collection-item waves-effect waves-light">
+                            <i class="material-icons left blue-text">domain</i>Registro Tirocinio Diretto
                         </a>
-                        <a href="{{ url_for('registro_tirocinio_indiretto') }}" class="collection-item">
-                            <i class="material-icons left">school</i>Registro Tirocinio Indiretto
+                        <a href="{{ url_for('registro_tirocinio_indiretto') }}" class="collection-item waves-effect waves-light">
+                            <i class="material-icons left blue-text">school</i>Registro Tirocinio Indiretto
                         </a>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Gestione Personale -->
-        <div class="col s12 m6">
-            <div class="card">
+    <!-- Gestione Personale -->
+    <div class="row">
+        <div class="col s12">
+            <div class="card blue lighten-5 z-depth-2 hoverable">
                 <div class="card-content">
-                    <span class="card-title"><i class="material-icons left">people</i>Gestione Personale</span>
+                    <span class="card-title blue-text text-darken-2">
+                        <i class="material-icons left medium">people</i>Gestione Personale
+                    </span>
                     <div class="collection">
-                        <a href="{{ url_for('insegnanti') }}" class="collection-item">
-                            <i class="material-icons left">person</i>Gestione Insegnanti
+                        <a href="{{ url_for('insegnanti') }}" class="collection-item waves-effect waves-light">
+                            <i class="material-icons left blue-text">person</i>Gestione Insegnanti
                         </a>
-                        <a href="{{ url_for('tutor_coordinatori') }}" class="collection-item">
-                            <i class="material-icons left">supervisor_account</i>Gestione Tutor Coordinatori
+                        <a href="{{ url_for('tutor_coordinatori') }}" class="collection-item waves-effect waves-light">
+                            <i class="material-icons left blue-text">supervisor_account</i>Gestione Tutor Coordinatori
                         </a>
-                        <a href="{{ url_for('tutor_collaboratori') }}" class="collection-item">
-                            <i class="material-icons left">group</i>Gestione Tutor Collaboratori
+                        <a href="{{ url_for('tutor_collaboratori') }}" class="collection-item waves-effect waves-light">
+                            <i class="material-icons left blue-text">group</i>Gestione Tutor Collaboratori
                         </a>
                     </div>
                 </div>
@@ -68,12 +75,14 @@
     <!-- Gestione Scuole -->
     <div class="row">
         <div class="col s12">
-            <div class="card">
+            <div class="card blue lighten-5 z-depth-2 hoverable">
                 <div class="card-content">
-                    <span class="card-title"><i class="material-icons left">location_city</i>Gestione Scuole</span>
+                    <span class="card-title blue-text text-darken-2">
+                        <i class="material-icons left medium">location_city</i>Gestione Scuole
+                    </span>
                     <div class="collection">
-                        <a href="{{ url_for('scuole_accreditate') }}" class="collection-item">
-                            <i class="material-icons left">business</i>Gestione Scuole Accreditate
+                        <a href="{{ url_for('scuole_accreditate') }}" class="collection-item waves-effect waves-light">
+                            <i class="material-icons left blue-text">business</i>Gestione Scuole Accreditate
                         </a>
                     </div>
                 </div>
@@ -84,17 +93,22 @@
 
 <style>
 .card {
-    margin: 1rem 0;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-top: 1rem;  /* Ridotto il margin-top visto che abbiamo rimosso l'header */
+    margin: 2rem 0;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
 }
 
 .card-title {
-    font-size: 1.5rem !important;
+    font-size: 2rem !important;
     font-weight: 500 !important;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 10px;
-    margin-bottom: 15px !important;
+    border-bottom: 2px solid #e3f2fd;
+    padding-bottom: 15px;
+    margin-bottom: 20px !important;
 }
 
 .collection {
@@ -103,22 +117,42 @@
 }
 
 .collection .collection-item {
-    border-radius: 4px;
-    margin: 5px 0;
-    transition: background-color 0.3s;
+    border-radius: 8px;
+    margin: 8px 0;
+    transition: all 0.3s ease;
+    border: 1px solid #e3f2fd;
+    padding: 15px !important;
 }
 
 .collection .collection-item:hover {
-    background-color: #f5f5f5;
+    background-color: #e3f2fd !important;
+    transform: translateX(10px);
 }
 
-.material-icons {
-    vertical-align: middle;
-    margin-right: 10px;
+.material-icons.left {
+    margin-right: 15px;
+}
+
+.material-icons.medium {
+    font-size: 3rem;
+}
+
+.material-icons.large {
+    font-size: 4rem;
+    display: block;
+    margin: 0 auto 20px;
 }
 
 .card-title .material-icons {
-    font-size: 2rem;
+    margin-right: 20px;
+}
+
+.blue-text.text-darken-2 {
+    color: #1976d2 !important;
+}
+
+.header {
+    display: none;  /* Nasconde eventuali header residui */
 }
 </style>
 {% endblock %}

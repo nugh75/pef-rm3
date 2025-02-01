@@ -2,42 +2,96 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Inserisci Presenze</h2>
-    <form action="{{ url_for('inserisci_presenza') }}" method="post" class="needs-validation" novalidate>
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        
-        <div class="form-group mb-3">
-            <label for="id_lezione">Lezione:</label>
-            <select class="form-control" id="id_lezione" name="id_lezione" required>
-                <option value="">Seleziona una lezione</option>
-                {% for lezione in lezioni %}
-                <option value="{{ lezione.id_lezione }}">
-                    {{ lezione.nome_lezione }} ({{ lezione.data.strftime('%d/%m/%Y') }})
-                </option>
-                {% endfor %}
-            </select>
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Inserimento Nuove Presenze</h2>
+                <a href="{{ url_for('lista_presenze') }}" class="btn btn-light">
+                    <i class="material-icons left">arrow_back</i>
+                    Torna al registro
+                </a>
+            </div>
         </div>
+        <div class="card-body">
+            <form action="{{ url_for('inserisci_presenza') }}" method="post" class="needs-validation" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="form-group">
+                            <label for="id_lezione" class="form-label fw-bold">Lezione:</label>
+                            <select class="form-select" id="id_lezione" name="id_lezione" required>
+                                <option value="">Seleziona una lezione</option>
+                                {% for lezione in lezioni %}
+                                <option value="{{ lezione.id_lezione }}">
+                                    {{ lezione.nome_lezione }} ({{ lezione.data.strftime('%d/%m/%Y') }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-        <div class="form-group mb-3">
-            <label for="id_studenti">Studenti Presenti:</label>
-            <select class="form-control" id="id_studenti" name="id_studenti" multiple required>
-                {% for studente in studenti %}
-                <option value="{{ studente.id_studente }}">
-                    {{ studente.cognome }} {{ studente.nome }}
-                </option>
-                {% endfor %}
-            </select>
-            <small class="form-text text-muted">Tieni premuto Ctrl (Cmd su Mac) per selezionare più studenti</small>
+                    <div class="col-md-6 mb-4">
+                        <div class="form-group">
+                            <label for="id_studenti" class="form-label fw-bold">Studenti Presenti:</label>
+                            <select class="form-select" id="id_studenti" name="id_studenti" multiple required>
+                                {% for studente in studenti %}
+                                <option value="{{ studente.id_studente }}">
+                                    {{ studente.cognome }} {{ studente.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Tieni premuto Ctrl (Cmd su Mac) per selezionare più studenti</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="material-icons left">save</i>
+                        Registra Presenze
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <button type="submit" class="btn btn-primary">Registra Presenze</button>
-    </form>
+    </div>
 </div>
+
+<style>
+.card {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.form-label {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+.select2-container {
+    width: 100% !important;
+}
+</style>
 
 <script>
 $(document).ready(function() {
     $('#id_studenti').select2({
         placeholder: 'Seleziona gli studenti presenti',
+        width: '100%'
+    });
+    
+    $('#id_lezione').select2({
+        placeholder: 'Seleziona una lezione',
         width: '100%'
     });
 });

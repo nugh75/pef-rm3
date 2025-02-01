@@ -10,7 +10,10 @@
 <body class="blue lighten-5">
     <nav class="blue darken-2">
         <div class="nav-wrapper container">
-            <a href="/" class="brand-logo">PEF Roma Tre</a>
+            <a href="/" class="brand-logo">
+                <i class="material-icons left" style="font-size: 2.5rem;">business</i>
+                <span class="hide-on-small-only">Home</span>
+            </a>
             <a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
             <ul class="right hide-on-med-and-down">
                 {% if current_user.is_authenticated %}
@@ -20,6 +23,7 @@
                     {% endif %}
                     {% if current_user.ruolo in ['segreteria', 'professore'] %}
                         <li><a href="{{ url_for('lezioni') }}"><i class="material-icons left">school</i>Lezioni</a></li>
+                        <li><a href="{{ url_for('lista_presenze') }}"><i class="material-icons left">assignment_turned_in</i>Registro Presenze</a></li>
                     {% endif %}
                     {% if current_user.ruolo in ['segreteria', 'studente'] %}
                         <li><a href="{{ url_for('registro_tirocinio_diretto') }}"><i class="material-icons left">assignment</i>Tirocinio Diretto</a></li>
@@ -39,6 +43,7 @@
             {% endif %}
             {% if current_user.ruolo in ['segreteria', 'professore'] %}
                 <li><a href="{{ url_for('lezioni') }}"><i class="material-icons left">school</i>Lezioni</a></li>
+                <li><a href="{{ url_for('lista_presenze') }}"><i class="material-icons left">assignment_turned_in</i>Registro Presenze</a></li>
             {% endif %}
             {% if current_user.ruolo in ['segreteria', 'studente'] %}
                 <li><a href="{{ url_for('registro_tirocinio_diretto') }}"><i class="material-icons left">assignment</i>Tirocinio Diretto</a></li>
