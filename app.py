@@ -210,6 +210,381 @@ class ImportLezioniForm(FlaskForm):
         FileAllowed(['xlsx', 'xls'], 'Solo file Excel (.xlsx, .xls)')
     ])
 
+class ImportTirocinioIndirettoForm(FlaskForm):
+    file = FileField('File Excel', validators=[
+        FileRequired(),
+        FileAllowed(['xlsx', 'xls'], 'Solo file Excel (.xlsx, .xls)')
+    ])
+
+class ImportTirocinioDirettoForm(FlaskForm):
+    file = FileField('File Excel', validators=[
+        FileRequired(),
+        FileAllowed(['xlsx', 'xls'], 'Solo file Excel (.xlsx, .xls)')
+    ])
+
+def validate_tirocinio_diretto_data(df):
+    errors = []
+    required_columns = [
+        'Studente', 'Scuola', 'Tutor Esterno', 'Data', 'Ore', 'Descrizione Attività'
+    ]
+    
+    # Verifica colonne obbligatorie
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        return [], [{'row': 0, 'message': f'Colonne mancanti: {", ".join(missing_columns)}'}]
+    
+    valid_tirocini = []
+    
+    for idx, row in df.iterrows():
+        row_number = idx + 2  # +2 perché Excel parte da 1 e ha l'header
+        try:
+            # Validazione base dei campi obbligatori
+            for col in required_columns:
+                if pd.isna(row[col]) or str(row[col]).strip() == '':
+                    errors.append({'row': row_number, 'message': f'Campo {col} mancante'})
+                    continue
+
+            # Validazione Studente
+            try:
+                nome_cognome = str(row['Studente']).strip().split(' ', 1)
+                if len(nome_cognome) != 2:
+                    errors.append({'row': row_number, 'message': 'Formato studente non valido (Nome Cognome)'})
+                    continue
+                nome, cognome = nome_cognome
+                studente = Studenti.query.filter(
+                    Studenti.nome.ilike(nome),
+                    Studenti.cognome.ilike(cognome)
+                ).first()
+                if not studente:
+                    errors.append({'row': row_number, 'message': f'Studente {nome} {cognome} non trovato'})
+                    continue
+                id_studente = studente.id_studente
+            except:
+                errors.append({'row': row_number, 'message': 'Errore nel formato dello studente'})
+                continue
+
+            # Validazione Scuola
+            try:
+                nome_scuola = str(row['Scuola']).strip()
+                scuola = ScuoleAccreditate.query.filter(
+                    ScuoleAccreditate.nome_scuola.ilike(nome_scuola)
+                ).first()
+                if not scuola:
+                    errors.append({'row': row_number, 'message': f'Scuola {nome_scuola} non trovata'})
+                    continue
+                id_scuola = scuola.id_scuola
+            except:
+                errors.append({'row': row_number, 'message': 'Errore nel formato della scuola'})
+                continue
+
+            # Validazione data
+            try:
+                if isinstance(row['Data'], str):
+                    data = datetime.strptime(row['Data'], '%d/%m/%Y').date()
+                else:
+                    data = row['Data'].date()
+            except:
+                errors.append({'row': row_number, 'message': 'Formato data non valido (GG/MM/AAAA)'})
+                continue
+
+            # Validazione ore
+            try:
+                ore = float(row['Ore'])
+                if ore <= 0:
+                    errors.append({'row': row_number, 'message': 'Le ore devono essere maggiori di 0'})
+                    continue
+            except:
+                errors.append({'row': row_number, 'message': 'Formato ore non valido'})
+                continue
+
+            # Calcolo CFU
+            cfu = calcola_cfu(ore)
+
+            # Validazione descrizione attività
+            descrizione = str(row['Descrizione Attività']).strip()
+            if len(descrizione) < 10:  # Minimo 10 caratteri per la descrizione
+                errors.append({'row': row_number, 'message': 'La descrizione attività deve essere più dettagliata (minimo 10 caratteri)'})
+                continue
+
+            # Validazione tutor esterno
+            tutor_esterno = str(row['Tutor Esterno']).strip()
+            if len(tutor_esterno) < 3:  # Minimo 3 caratteri per il nome del tutor
+                errors.append({'row': row_number, 'message': 'Nome tutor esterno troppo breve'})
+                continue
+
+            # Se arriviamo qui, la riga è valida
+            valid_tirocini.append({
+                'id_studente': id_studente,
+                'id_scuola': id_scuola,
+                'tutor_esterno': tutor_esterno,
+                'data': data,
+                'ore': ore,
+                'cfu': cfu,
+                'descrizione_attivita': descrizione.strip()
+            })
+
+        except Exception as e:
+            errors.append({'row': row_number, 'message': f'Errore generico: {str(e)}'})
+            continue
+
+    return valid_tirocini, errors
+
+def import_tirocini_diretti(tirocini):
+    success = []
+    errors = []
+    
+    for tirocinio_data in tirocini:
+        try:
+            tirocinio = RegistroPresenzeTirocinioDiretto(
+                id_studente=tirocinio_data['id_studente'],
+                id_scuola=tirocinio_data['id_scuola'],
+                tutor_esterno=tirocinio_data['tutor_esterno'],
+                data=tirocinio_data['data'],
+                ore=tirocinio_data['ore'],
+                cfu=tirocinio_data['cfu'],
+                descrizione_attivita=tirocinio_data['descrizione_attivita']
+            )
+            
+            db.session.add(tirocinio)
+            success.append(tirocinio_data)
+            
+        except Exception as e:
+            db.session.rollback()
+            errors.append({
+                'row': tirocini.index(tirocinio_data) + 2,
+                'message': f'Errore durante l\'importazione: {str(e)}'
+            })
+            continue
+
+    if success:
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return [], [{'row': 0, 'message': f'Errore durante il salvataggio: {str(e)}'}]
+
+    return success, errors
+
+@app.route('/import_tirocinio_diretto', methods=['GET', 'POST'])
+@login_required
+@role_required(ROLE_SEGRETERIA, ROLE_STUDENTE)
+def import_tirocinio_diretto():
+    form = ImportTirocinioDirettoForm()
+    results = None
+    
+    if form.validate_on_submit():
+        try:
+            file = form.file.data
+            if file and allowed_file(file.filename):
+                # Leggi il file Excel
+                df = pd.read_excel(file, engine='openpyxl')
+                
+                # Valida i dati
+                valid_tirocini, validation_errors = validate_tirocinio_diretto_data(df)
+                
+                if validation_errors:
+                    results = {'success': [], 'errors': validation_errors}
+                else:
+                    # Importa i tirocini validi
+                    success, import_errors = import_tirocini_diretti(valid_tirocini)
+                    results = {
+                        'success': success,
+                        'errors': import_errors
+                    }
+                    
+                    if success and not import_errors:
+                        flash('Importazione completata con successo!', 'success')
+                    elif success:
+                        flash('Importazione completata con alcuni errori.', 'warning')
+                    else:
+                        flash('Errore durante l\'importazione.', 'error')
+            else:
+                flash('Tipo di file non supportato.', 'error')
+        except Exception as e:
+            app.logger.error(f'Errore durante l\'importazione: {str(e)}')
+            flash(f'Errore durante l\'elaborazione del file: {str(e)}', 'error')
+    
+    return render_template('tirocinio_diretto/import_tirocinio_diretto.html', form=form, results=results)
+def validate_tirocinio_indiretto_data(df):
+    errors = []
+    required_columns = [
+        'Studente', 'Tutor Coordinatore', 'Data', 'Ore', 'Descrizione Attività'
+    ]
+    
+    # Verifica colonne obbligatorie
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        return [], [{'row': 0, 'message': f'Colonne mancanti: {", ".join(missing_columns)}'}]
+    
+    valid_tirocini = []
+    
+    for idx, row in df.iterrows():
+        row_number = idx + 2  # +2 perché Excel parte da 1 e ha l'header
+        try:
+            # Validazione base dei campi obbligatori
+            for col in required_columns:
+                if pd.isna(row[col]) or str(row[col]).strip() == '':
+                    errors.append({'row': row_number, 'message': f'Campo {col} mancante'})
+                    continue
+
+            # Validazione Studente
+            try:
+                nome_cognome = str(row['Studente']).strip().split(' ', 1)
+                if len(nome_cognome) != 2:
+                    errors.append({'row': row_number, 'message': 'Formato studente non valido (Nome Cognome)'})
+                    continue
+                nome, cognome = nome_cognome
+                studente = Studenti.query.filter(
+                    Studenti.nome.ilike(nome),
+                    Studenti.cognome.ilike(cognome)
+                ).first()
+                if not studente:
+                    errors.append({'row': row_number, 'message': f'Studente {nome} {cognome} non trovato'})
+                    continue
+                id_studente = studente.id_studente
+            except:
+                errors.append({'row': row_number, 'message': 'Errore nel formato dello studente'})
+                continue
+
+            # Validazione Tutor Coordinatore
+            try:
+                nome_cognome = str(row['Tutor Coordinatore']).strip().split(' ', 1)
+                if len(nome_cognome) != 2:
+                    errors.append({'row': row_number, 'message': 'Formato tutor non valido (Nome Cognome)'})
+                    continue
+                nome, cognome = nome_cognome
+                tutor = TutorCoordinatori.query.filter(
+                    TutorCoordinatori.nome.ilike(nome),
+                    TutorCoordinatori.cognome.ilike(cognome)
+                ).first()
+                if not tutor:
+                    errors.append({'row': row_number, 'message': f'Tutor {nome} {cognome} non trovato'})
+                    continue
+                id_tutor = tutor.id_tutor_coordinatore
+            except:
+                errors.append({'row': row_number, 'message': 'Errore nel formato del tutor'})
+                continue
+
+            # Validazione data
+            try:
+                if isinstance(row['Data'], str):
+                    data = datetime.strptime(row['Data'], '%d/%m/%Y').date()
+                else:
+                    data = row['Data'].date()
+            except:
+                errors.append({'row': row_number, 'message': 'Formato data non valido (GG/MM/AAAA)'})
+                continue
+
+            # Validazione ore
+            try:
+                ore = float(row['Ore'])
+                if ore <= 0:
+                    errors.append({'row': row_number, 'message': 'Le ore devono essere maggiori di 0'})
+                    continue
+            except:
+                errors.append({'row': row_number, 'message': 'Formato ore non valido'})
+                continue
+
+            # Calcolo CFU
+            cfu = calcola_cfu(ore)
+
+            # Validazione descrizione attività
+            descrizione = str(row['Descrizione Attività']).strip()
+            if len(descrizione) < 10:  # Minimo 10 caratteri per la descrizione
+                errors.append({'row': row_number, 'message': 'La descrizione attività deve essere più dettagliata (minimo 10 caratteri)'})
+                continue
+
+            # Se arriviamo qui, la riga è valida
+            valid_tirocini.append({
+                'id_studente': id_studente,
+                'id_tutor_coordinatore': id_tutor,
+                'data': data,
+                'ore': ore,
+                'cfu': cfu,
+                'descrizione_attivita': descrizione.strip()
+            })
+
+        except Exception as e:
+            errors.append({'row': row_number, 'message': f'Errore generico: {str(e)}'})
+            continue
+
+    return valid_tirocini, errors
+
+def import_tirocini_indiretti(tirocini):
+    success = []
+    errors = []
+    
+    for tirocinio_data in tirocini:
+        try:
+            tirocinio = RegistroPresenzeTirocinioIndiretto(
+                id_studente=tirocinio_data['id_studente'],
+                id_tutor_coordinatore=tirocinio_data['id_tutor_coordinatore'],
+                data=tirocinio_data['data'],
+                ore=tirocinio_data['ore'],
+                cfu=tirocinio_data['cfu'],
+                descrizione_attivita=tirocinio_data['descrizione_attivita']
+            )
+            
+            db.session.add(tirocinio)
+            success.append(tirocinio_data)
+            
+        except Exception as e:
+            db.session.rollback()
+            errors.append({
+                'row': tirocini.index(tirocinio_data) + 2,
+                'message': f'Errore durante l\'importazione: {str(e)}'
+            })
+            continue
+
+    if success:
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return [], [{'row': 0, 'message': f'Errore durante il salvataggio: {str(e)}'}]
+
+    return success, errors
+
+@app.route('/import_tirocinio_indiretto', methods=['GET', 'POST'])
+@login_required
+@role_required(ROLE_SEGRETERIA)
+def import_tirocinio_indiretto():
+    form = ImportTirocinioIndirettoForm()
+    results = None
+    
+    if form.validate_on_submit():
+        try:
+            file = form.file.data
+            if file and allowed_file(file.filename):
+                # Leggi il file Excel
+                df = pd.read_excel(file, engine='openpyxl')
+                
+                # Valida i dati
+                valid_tirocini, validation_errors = validate_tirocinio_indiretto_data(df)
+                
+                if validation_errors:
+                    results = {'success': [], 'errors': validation_errors}
+                else:
+                    # Importa i tirocini validi
+                    success, import_errors = import_tirocini_indiretti(valid_tirocini)
+                    results = {
+                        'success': success,
+                        'errors': import_errors
+                    }
+                    
+                    if success and not import_errors:
+                        flash('Importazione completata con successo!', 'success')
+                    elif success:
+                        flash('Importazione completata con alcuni errori.', 'warning')
+                    else:
+                        flash('Errore durante l\'importazione.', 'error')
+            else:
+                flash('Tipo di file non supportato.', 'error')
+        except Exception as e:
+            app.logger.error(f'Errore durante l\'importazione: {str(e)}')
+            flash(f'Errore durante l\'elaborazione del file: {str(e)}', 'error')
+    
+    return render_template('tirocinio_indiretto/import_tirocinio_indiretto.html', form=form, results=results)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 

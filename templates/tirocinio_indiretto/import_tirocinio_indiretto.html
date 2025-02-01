@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Importa Tirocini Indiretti da Excel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h3 class="center">Importa Tirocini Indiretti da Excel</h3>
+
+    <!-- Istruzioni -->
+    <div class="card blue-grey lighten-5">
+        <div class="card-content">
+            <span class="card-title">Istruzioni</span>
+            <p>Il file Excel deve contenere le seguenti colonne:</p>
+            <ul>
+                <li><strong>Studente</strong> (obbligatorio, formato: Nome Cognome) - Es: "Mario Rossi"</li>
+                <li><strong>Tutor Coordinatore</strong> (obbligatorio, formato: Nome Cognome) - Es: "Giuseppe Verdi"</li>
+                <li><strong>Data</strong> (obbligatorio, formato: GG/MM/AAAA) - Es: "25/01/2025"</li>
+                <li><strong>Ore</strong> (obbligatorio, formato numerico) - Es: "4.5"</li>
+                <li><strong>Descrizione Attività</strong> (obbligatorio) - Dettaglio delle attività svolte</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Esempio Excel -->
+    <div class="card blue-grey lighten-5">
+        <div class="card-content">
+            <span class="card-title">Esempio di riga Excel</span>
+            <div class="row">
+                <div class="col s12" style="overflow-x: auto;">
+                    <table class="highlight">
+                        <thead>
+                            <tr>
+                                <th>Studente</th>
+                                <th>Tutor Coordinatore</th>
+                                <th>Data</th>
+                                <th>Ore</th>
+                                <th>Descrizione Attività</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Mario Rossi</td>
+                                <td>Giuseppe Verdi</td>
+                                <td>25/01/2025</td>
+                                <td>4.5</td>
+                                <td>Partecipazione attiva alla lezione frontale e al lavoro di gruppo. Discussione guidata sui metodi di insegnamento e apprendimento.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form di upload -->
+    <div class="card">
+        <div class="card-content">
+            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                {{ form.csrf_token }}
+                <div class="row">
+                    <div class="col s12">
+                        <p class="grey-text">
+                            Suggerimenti:
+                            <ul>
+                                <li>Utilizzare Excel (.xlsx, .xls)</li>
+                                <li>Assicurarsi che i nomi delle colonne corrispondano esattamente</li>
+                                <li>Per studenti e tutor, usare il formato "Nome Cognome"</li>
+                                <li>Inserire descrizioni dettagliate per metodologie, obiettivi e competenze</li>
+                                <li>Verificare la correttezza dei dati prima dell'importazione</li>
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+                <div class="file-field input-field">
+                    <div class="btn blue">
+                        <span>File</span>
+                        <input type="file" name="file" accept=".xlsx,.xls" required>
+                    </div>
+                    <div class="file-path-wrapper">
+                        <input class="file-path validate" type="text" placeholder="Seleziona il file Excel">
+                    </div>
+                </div>
+
+                <div class="center-align" style="margin-top: 20px;">
+                    <button class="btn waves-effect waves-light blue" type="submit" id="submitBtn">
+                        Importa <i class="material-icons right">file_upload</i>
+                    </button>
+                    <a href="{{ url_for('registro_tirocinio_indiretto') }}" class="btn waves-effect waves-light red">
+                        Annulla <i class="material-icons right">cancel</i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Risultati importazione -->
+    {% if results %}
+    <div class="card">
+        <div class="card-content">
+            <span class="card-title">Risultati Importazione</span>
+            
+            {% if results.success %}
+            <div class="green-text">
+                <p><i class="material-icons tiny">check_circle</i> Importati con successo: {{ results.success|length }} tirocini</p>
+            </div>
+            {% endif %}
+
+            {% if results.errors %}
+            <div class="red-text">
+                <p><i class="material-icons tiny">error</i> Errori riscontrati:</p>
+                <ul>
+                {% for error in results.errors %}
+                    <li>Riga {{ error.row }}: {{ error.message }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Progress bar -->
+<div id="progressModal" class="modal">
+    <div class="modal-content center-align">
+        <h4>Importazione in corso...</h4>
+        <div class="progress">
+            <div class="indeterminate"></div>
+        </div>
+        <p>Attendere il completamento dell'importazione...</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var modal = M.Modal.init(document.getElementById('progressModal'), {
+        dismissible: false
+    });
+
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+        modal.open();
+    });
+});
+</script>
+{% endblock %}
