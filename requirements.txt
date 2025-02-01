@@ -7,3 +7,5 @@ cryptography==41.0.3
 Werkzeug==3.0.1
 Flask-WTF==1.2.1
 Flask-Migrate==3.1.0
+pandas==2.1.4
+openpyxl==3.1.2

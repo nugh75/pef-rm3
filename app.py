@@ -8,9 +8,19 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, validators
 from sqlalchemy import or_
 
+import pandas as pd
+from werkzeug.utils import secure_filename
+import os
+from datetime import datetime, date, time
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+
 from config.config import config
 from config.roles import *
 from flask_wtf.csrf import CSRFProtect
+
+# Configurazione upload
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/uploads')
+ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 
 # Inizializza l'applicazione
 app = Flask(__name__)
@@ -24,6 +34,19 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+def role_required(*roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for('login'))
+            if current_user.ruolo not in roles:
+                flash('Non hai i permessi necessari per accedere a questa pagina.', 'error')
+                return redirect(url_for('index'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 # --- Modelli Database ---
 class User(UserMixin, db.Model):
@@ -181,6 +204,240 @@ class LoginForm(FlaskForm):
     email = StringField('Email', [validators.DataRequired(), validators.Email()])
     password = PasswordField('Password', [validators.DataRequired()])
 
+class ImportLezioniForm(FlaskForm):
+    file = FileField('File Excel', validators=[
+        FileRequired(),
+        FileAllowed(['xlsx', 'xls'], 'Solo file Excel (.xlsx, .xls)')
+    ])
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def validate_excel_data(df):
+    errors = []
+    required_columns = ['Nome Lezione', 'Data', 'Orario Inizio', 'Orario Fine', 'Insegnante']
+    
+    # Verifica colonne obbligatorie
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        return [], [{'row': 0, 'message': f'Colonne mancanti: {", ".join(missing_columns)}'}]
+    
+    valid_lessons = []
+    
+    for idx, row in df.iterrows():
+        row_number = idx + 2  # +2 perché Excel parte da 1 e ha l'header
+        try:
+            # Validazione base
+            if pd.isna(row['Nome Lezione']) or str(row['Nome Lezione']).strip() == '':
+                errors.append({'row': row_number, 'message': 'Nome lezione mancante'})
+                continue
+                
+            # Validazione data
+            try:
+                if isinstance(row['Data'], str):
+                    data = datetime.strptime(row['Data'], '%d/%m/%Y').date()
+                else:
+                    data = row['Data'].date()
+            except:
+                errors.append({'row': row_number, 'message': 'Formato data non valido (DD/MM/YYYY)'})
+                continue
+
+            # Validazione orari
+            try:
+                if isinstance(row['Orario Inizio'], str):
+                    orario_inizio = datetime.strptime(row['Orario Inizio'], '%H:%M').time()
+                else:
+                    orario_inizio = row['Orario Inizio'].time()
+                    
+                if isinstance(row['Orario Fine'], str):
+                    orario_fine = datetime.strptime(row['Orario Fine'], '%H:%M').time()
+                else:
+                    orario_fine = row['Orario Fine'].time()
+            except:
+                errors.append({'row': row_number, 'message': 'Formato orario non valido (HH:MM)'})
+                continue
+
+            if orario_fine <= orario_inizio:
+                errors.append({'row': row_number, 'message': 'Orario fine deve essere successivo a orario inizio'})
+                continue
+
+            # Validazione Insegnante
+            try:
+                nome_cognome = str(row['Insegnante']).strip().split(' ', 1)
+                if len(nome_cognome) != 2:
+                    errors.append({'row': row_number, 'message': 'Formato insegnante non valido (Nome Cognome)'})
+                    continue
+                nome, cognome = nome_cognome
+                insegnante = Insegnanti.query.filter(
+                    Insegnanti.nome.ilike(nome),
+                    Insegnanti.cognome.ilike(cognome)
+                ).first()
+                if not insegnante:
+                    errors.append({'row': row_number, 'message': f'Insegnante {nome} {cognome} non trovato'})
+                    continue
+                id_insegnante = insegnante.id_insegnante
+            except:
+                errors.append({'row': row_number, 'message': 'Errore nel formato dell\'insegnante'})
+                continue
+
+            # Validazione relazioni opzionali
+            classi_ids = []
+            if 'Classi di Concorso' in row and not pd.isna(row['Classi di Concorso']):
+                try:
+                    classi_codici = [c.strip() for c in str(row['Classi di Concorso']).split(',')]
+                    for codice in classi_codici:
+                        classe = ClassiConcorso.query.filter(ClassiConcorso.nome_classe == codice).first()
+                        if not classe:
+                            errors.append({'row': row_number, 'message': f'Classe di concorso {codice} non trovata'})
+                            continue
+                        classi_ids.append(classe.id_classe)
+                except:
+                    errors.append({'row': row_number, 'message': 'Errore nel formato delle classi di concorso'})
+                    continue
+
+            dipartimenti_ids = []
+            if 'Dipartimenti' in row and not pd.isna(row['Dipartimenti']):
+                try:
+                    dipartimenti_nomi = [d.strip() for d in str(row['Dipartimenti']).split(',')]
+                    for nome in dipartimenti_nomi:
+                        dipartimento = Dipartimenti.query.filter(Dipartimenti.nome.ilike(nome)).first()
+                        if not dipartimento:
+                            errors.append({'row': row_number, 'message': f'Dipartimento {nome} non trovato'})
+                            continue
+                        dipartimenti_ids.append(dipartimento.id)
+                except:
+                    errors.append({'row': row_number, 'message': 'Errore nel formato dei dipartimenti'})
+                    continue
+
+            percorsi_ids = []
+            if 'Percorsi' in row and not pd.isna(row['Percorsi']):
+                try:
+                    percorsi_nomi = [p.strip() for p in str(row['Percorsi']).split(',')]
+                    for nome in percorsi_nomi:
+                        percorso = Percorsi.query.filter(Percorsi.nome_percorso.ilike(nome)).first()
+                        if not percorso:
+                            errors.append({'row': row_number, 'message': f'Percorso {nome} non trovato'})
+                            continue
+                        percorsi_ids.append(percorso.id_percorso)
+                except:
+                    errors.append({'row': row_number, 'message': 'Errore nel formato dei percorsi'})
+                    continue
+
+            # Se arriviamo qui, la riga è valida
+            durata, cfu = calcola_durata_e_cfu(orario_inizio, orario_fine)
+            
+            valid_lessons.append({
+                'nome_lezione': str(row['Nome Lezione']).strip(),
+                'data': data,
+                'orario_inizio': orario_inizio,
+                'orario_fine': orario_fine,
+                'durata': durata,
+                'cfu': cfu,
+                'id_insegnante': id_insegnante,
+                'classi_ids': classi_ids,
+                'dipartimenti_ids': dipartimenti_ids,
+                'percorsi_ids': percorsi_ids
+            })
+
+        except Exception as e:
+            errors.append({'row': row_number, 'message': f'Errore generico: {str(e)}'})
+            continue
+
+    return valid_lessons, errors
+
+def import_lessons(lessons):
+    success = []
+    errors = []
+    
+    for lesson_data in lessons:
+        try:
+            lezione = Lezioni(
+                nome_lezione=lesson_data['nome_lezione'],
+                data=lesson_data['data'],
+                orario_inizio=lesson_data['orario_inizio'],
+                orario_fine=lesson_data['orario_fine'],
+                durata=lesson_data['durata'],
+                cfu=lesson_data['cfu'],
+                id_insegnante=lesson_data['id_insegnante']
+            )
+            
+            # Aggiungi relazioni
+            if lesson_data['classi_ids']:
+                lezione.classi_concorso = ClassiConcorso.query.filter(
+                    ClassiConcorso.id_classe.in_(lesson_data['classi_ids'])
+                ).all()
+                
+            if lesson_data['dipartimenti_ids']:
+                lezione.dipartimenti = Dipartimenti.query.filter(
+                    Dipartimenti.id.in_(lesson_data['dipartimenti_ids'])
+                ).all()
+                
+            if lesson_data['percorsi_ids']:
+                lezione.percorsi = Percorsi.query.filter(
+                    Percorsi.id_percorso.in_(lesson_data['percorsi_ids'])
+                ).all()
+
+            db.session.add(lezione)
+            success.append(lesson_data)
+            
+        except Exception as e:
+            db.session.rollback()
+            errors.append({
+                'row': lessons.index(lesson_data) + 2,
+                'message': f'Errore durante l\'importazione: {str(e)}'
+            })
+            continue
+
+    if success:
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return [], [{'row': 0, 'message': f'Errore durante il salvataggio: {str(e)}'}]
+
+    return success, errors
+
+@app.route('/import_lezioni', methods=['GET', 'POST'])
+@login_required
+@role_required(ROLE_SEGRETERIA, ROLE_PROFESSORE)
+def import_lezioni():
+    form = ImportLezioniForm()
+    results = None
+    
+    if form.validate_on_submit():
+        try:
+            file = form.file.data
+            if file and allowed_file(file.filename):
+                # Leggi il file Excel
+                df = pd.read_excel(file, engine='openpyxl')
+                
+                # Valida i dati
+                valid_lessons, validation_errors = validate_excel_data(df)
+                
+                if validation_errors:
+                    results = {'success': [], 'errors': validation_errors}
+                else:
+                    # Importa le lezioni valide
+                    success, import_errors = import_lessons(valid_lessons)
+                    results = {
+                        'success': success,
+                        'errors': import_errors
+                    }
+                    
+                    if success and not import_errors:
+                        flash('Importazione completata con successo!', 'success')
+                    elif success:
+                        flash('Importazione completata con alcuni errori.', 'warning')
+                    else:
+                        flash('Errore durante l\'importazione.', 'error')
+            else:
+                flash('Tipo di file non supportato.', 'error')
+        except Exception as e:
+            app.logger.error(f'Errore durante l\'importazione: {str(e)}')
+            flash(f'Errore durante l\'elaborazione del file: {str(e)}', 'error')
+    
+    return render_template('lezioni/import_lezioni.html', form=form, results=results)
+
 
 # --- Funzioni Utilità ---
 def calcola_cfu(ore, ore_per_cfu=6):
@@ -239,19 +496,6 @@ def calcola_totali_tutor(id_tutor):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-def role_required(*roles):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated:
-                return redirect(url_for('login'))
-            if current_user.ruolo not in roles:
-                flash('Non hai i permessi necessari per accedere a questa pagina.', 'error')
-                return redirect(url_for('index'))
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
 
 # --- Route ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -756,7 +1000,7 @@ def lezioni():
         tutte_classi = ClassiConcorso.query.order_by(ClassiConcorso.nome_classe).all()
         dipartimenti = Dipartimenti.query.order_by(Dipartimenti.nome).all()
         percorsi = Percorsi.query.order_by(Percorsi.nome_percorso).all()
-        return render_template('tab_lezioni.html', lezioni=lezioni_list, tutti_insegnanti=tutti_insegnanti, tutte_classi=tutte_classi, dipartimenti=dipartimenti, percorsi=percorsi, cfu_sum=cfu_sum)
+        return render_template('lezioni/tab_lezioni.html', lezioni=lezioni_list, tutti_insegnanti=tutti_insegnanti, tutte_classi=tutte_classi, dipartimenti=dipartimenti, percorsi=percorsi, cfu_sum=cfu_sum)
     except Exception as e:
         app.logger.error(f'Errore nella route lezioni: {str(e)}')
         flash(f'Si è verificato un errore nel caricamento delle lezioni: {str(e)}', 'error')
@@ -819,7 +1063,7 @@ def edit_lezione(id):
         except Exception as e:
             db.session.rollback()
             flash(f'Errore durante l\'aggiornamento della lezione: {str(e)}', 'error')
-    return render_template('edit_lezione.html', lezione=lezione, insegnanti=insegnanti, classi=classi, dipartimenti=dipartimenti, percorsi=percorsi)
+    return render_template('lezioni/edit_lezione.html', lezione=lezione, insegnanti=insegnanti, classi=classi, dipartimenti=dipartimenti, percorsi=percorsi)
 
 @app.route('/delete_lezione/<int:id>')
 @login_required
