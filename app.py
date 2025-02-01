@@ -1,56 +1,29 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
-from dotenv import load_dotenv
 from datetime import datetime, date, time
 from functools import wraps
-import os
 from flask_wtf import FlaskForm
-from wtforms import HiddenField  # If you need any fields, otherwise you can just use FlaskForm for CSRF
+from wtforms import StringField, PasswordField, validators
 from sqlalchemy import or_
 
-# Ruoli utente
-ROLE_ADMIN = 'admin'
-ROLE_STUDENTE = 'studente'
-ROLE_PROFESSORE = 'professore'
-ROLE_SEGRETERIA = 'segreteria'
-ROLE_TUTOR_COLLABORATORE = 'tutor_collaboratore'
-ROLE_TUTOR_COORDINATORE = 'tutor_coordinatore'
+from config.config import config
+from config.roles import *
+from flask_wtf.csrf import CSRFProtect
 
-# Carica le variabili d'ambiente
-load_dotenv()
-
+# Inizializza l'applicazione
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'dev')  # Chiave segreta per le sessioni
 
-# Inizializza CSRF protection
+# Configura l'applicazione
+app_config = config['development']
+app_config.init_app(app)
+
 csrf = CSRFProtect(app)
-
-# Configurazione del database
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-
-import logging
-from logging.handlers import RotatingFileHandler
-
-# Configura il logging
-if not os.path.exists('logs'):
-    os.mkdir('logs')
-file_handler = RotatingFileHandler('logs/pef-rm3.log', maxBytes=10240, backupCount=10)
-file_handler.setFormatter(logging.Formatter(
-    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-))
-file_handler.setLevel(logging.INFO)
-app.logger.addHandler(file_handler)
-app.logger.setLevel(logging.INFO)
-app.logger.info('PEF-RM3 startup')
 
 # --- Modelli Database ---
 class User(UserMixin, db.Model):
@@ -204,6 +177,11 @@ class Studenti(db.Model):
 class DeleteTutorCollaboratoreForm(FlaskForm):
     pass
 
+class LoginForm(FlaskForm):
+    email = StringField('Email', [validators.DataRequired(), validators.Email()])
+    password = PasswordField('Password', [validators.DataRequired()])
+
+
 # --- Funzioni Utilità ---
 def calcola_cfu(ore, ore_per_cfu=6):
     """Calcola i CFU in base alle ore."""
@@ -280,17 +258,16 @@ def role_required(*roles):
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password) and user.is_active:
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and user.check_password(form.password.data) and user.is_active:
             login_user(user)
             flash('Login effettuato con successo!', 'success')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('index'))
         flash('Email o password non validi.', 'error')
-    return render_template('login.html')
+    return render_template('login.html', form=form)
 
 @app.route('/logout')
 @login_required
