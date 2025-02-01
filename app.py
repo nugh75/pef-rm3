@@ -148,7 +148,7 @@ class LezioniDipartimenti(db.Model):
 class LezioniPercorsi(db.Model):
     __tablename__ = 'Lezioni_Percorsi'
     id_lezione = db.Column(db.Integer, db.ForeignKey('Lezioni.id_lezione'), primary_key=True)
-    id_percorso = db.Column(db.Integer, db.ForeignKey('Percorsi.id_percorso'), primary key=True)
+    id_percorso = db.Column(db.Integer, db.ForeignKey('Percorsi.id_percorso'), primary_key=True)
 
 class ClassiConcorso(db.Model):
     __tablename__ = 'Classi di concorso'
