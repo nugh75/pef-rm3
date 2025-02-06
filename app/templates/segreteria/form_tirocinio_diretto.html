@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{{ title }}</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.csrf_token }}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.id_studente.label(class="form-label") }}
+                                    {{ form.id_studente(class="form-control") }}
+                                    {% if form.id_studente.errors %}
+                                        {% for error in form.id_studente.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.id_scuola.label(class="form-label") }}
+                                    {{ form.id_scuola(class="form-control") }}
+                                    {% if form.id_scuola.errors %}
+                                        {% for error in form.id_scuola.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.tutor_esterno.label(class="form-label") }}
+                                    {{ form.tutor_esterno(class="form-control") }}
+                                    {% if form.tutor_esterno.errors %}
+                                        {% for error in form.tutor_esterno.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.data.label(class="form-label") }}
+                                    {{ form.data(class="form-control", type="date") }}
+                                    {% if form.data.errors %}
+                                        {% for error in form.data.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.ore.label(class="form-label") }}
+                                    {{ form.ore(class="form-control", type="number", step="0.5") }}
+                                    {% if form.ore.errors %}
+                                        {% for error in form.ore.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            {{ form.descrizione_attivita.label(class="form-label") }}
+                            {{ form.descrizione_attivita(class="form-control", rows=4) }}
+                            {% if form.descrizione_attivita.errors %}
+                                {% for error in form.descrizione_attivita.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('segreteria.tirocinio_diretto') }}" class="btn btn-secondary">Annulla</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

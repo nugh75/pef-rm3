@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Registro Tirocinio Indiretto</h2>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Riepilogo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Ore Totali</h6>
+                            <p class="h3">{{ tirocini|sum(attribute='ore')|round(2) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>CFU Totali</h6>
+                            <p class="h3">{{ tirocini|sum(attribute='cfu')|round(2) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Presenze</h5>
+                </div>
+                <div class="card-body">
+                    {% if tirocini %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tutor Coordinatore</th>
+                                    <th>Ore</th>
+                                    <th>CFU</th>
+                                    <th>Descrizione Attività</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tirocinio in tirocini %}
+                                <tr>
+                                    <td>{{ tirocinio.data.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        {% if tirocinio.tutor_coordinatore %}
+                                            {{ tirocinio.tutor_coordinatore.nome }} {{ tirocinio.tutor_coordinatore.cognome }}
+                                        {% else %}
+                                            <em>Non assegnato</em>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ tirocinio.ore|round(2) }}</td>
+                                    <td>{{ tirocinio.cfu|round(2) }}</td>
+                                    <td>{{ tirocinio.descrizione_attivita }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        Non ci sono ancora presenze registrate per il tirocinio indiretto.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

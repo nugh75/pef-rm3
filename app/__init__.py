@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
@@ -38,9 +38,19 @@ def create_app():
     csrf.init_app(app)
     
     login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Effettua il login per accedere a questa pagina.'
+    login_manager.login_message_category = 'warning'
     
     # Registra i blueprints
-    from .routes import main_bp, auth_bp, student_bp, admin_bp, teacher_bp, tutor_bp, attendance_bp, school_bp
+    from .routes.main import main_bp
+    from .routes.auth import auth_bp
+    from .routes.student import student_bp
+    from .routes.admin import admin_bp
+    from .routes.teacher import teacher_bp
+    from .routes.tutor import tutor_bp
+    from .routes.attendance import attendance_bp
+    from .routes.school import school_bp
+    from .routes.segreteria import segreteria_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -50,10 +60,25 @@ def create_app():
     app.register_blueprint(tutor_bp, url_prefix='/tutor')
     app.register_blueprint(attendance_bp, url_prefix='/attendance')
     app.register_blueprint(school_bp, url_prefix='/school')
+    app.register_blueprint(segreteria_bp, url_prefix='/segreteria')
     
     @login_manager.user_loader
     def load_user(id):
         from app.models.user import User
         return User.query.get(int(id))
     
-    return app 
+    # Error handlers
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return render_template('error/403.html'), 403
+        
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('error/404.html'), 404
+        
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return render_template('error/500.html'), 500
+    
+    return app

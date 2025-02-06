@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Benvenuto, {{ current_user.nome }} {{ current_user.cognome }}</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Tirocinio Diretto</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Gestisci le tue presenze per il tirocinio diretto</p>
+                    <a href="{{ url_for('student.registro_tirocinio_diretto') }}" class="btn btn-primary">
+                        <i class="fas fa-briefcase"></i> Vai al registro
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Tirocinio Indiretto</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Gestisci le tue presenze per il tirocinio indiretto</p>
+                    <a href="{{ url_for('student.registro_tirocinio_indiretto') }}" class="btn btn-primary">
+                        <i class="fas fa-clipboard-list"></i> Vai al registro
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Riepilogo CFU</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Ore Totali</th>
+                                    <th>CFU Acquisiti</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Tirocinio Diretto</td>
+                                    <td>{{ ore_tirocinio_diretto|default(0) }}</td>
+                                    <td>{{ cfu_tirocinio_diretto|default(0) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Tirocinio Indiretto</td>
+                                    <td>{{ ore_tirocinio_indiretto|default(0) }}</td>
+                                    <td>{{ cfu_tirocinio_indiretto|default(0) }}</td>
+                                </tr>
+                                <tr class="table-info">
+                                    <td><strong>Totale</strong></td>
+                                    <td><strong>{{ (ore_tirocinio_diretto|default(0) + ore_tirocinio_indiretto|default(0))|round(2) }}</strong></td>
+                                    <td><strong>{{ (cfu_tirocinio_diretto|default(0) + cfu_tirocinio_indiretto|default(0))|round(2) }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

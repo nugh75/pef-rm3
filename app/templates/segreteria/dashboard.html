@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Dashboard Segreteria</h2>
+            <p class="text-muted">Benvenuto, {{ current_user.nome }} {{ current_user.cognome }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Gestione Tirocini -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-graduation-cap"></i> Gestione Tirocini
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('segreteria.tirocinio_diretto') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-graduate"></i> Tirocinio Diretto
+                        </a>
+                        <a href="{{ url_for('segreteria.tirocinio_indiretto') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-chalkboard-teacher"></i> Tirocinio Indiretto
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestione Tutor -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users"></i> Gestione Tutor
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('tutor.tutor_coordinatori') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-tie"></i> Tutor Coordinatori
+                        </a>
+                        <a href="{{ url_for('tutor.tutor_collaboratori') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-friends"></i> Tutor Collaboratori
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestione Scuole -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-school"></i> Gestione Scuole
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('school.scuole_accreditate') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-building"></i> Scuole Accreditate
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestione Lezioni -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chalkboard-teacher"></i> Gestione Lezioni
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('teacher.lezioni') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-book"></i> Gestione Lezioni
+                        </a>
+                        <a href="{{ url_for('teacher.import_lezioni') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-file-import"></i> Importa Lezioni
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

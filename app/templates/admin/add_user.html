@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2>Aggiungi Nuovo Utente</h2>
+        <form method="POST">
+            {{ form.csrf_token }}
+            
+            <div class="form-group">
+                {{ form.email.label }}
+                {{ form.email(class="form-control", placeholder="Inserisci email") }}
+                {% if form.email.errors %}
+                    {% for error in form.email.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(class="form-control", placeholder="Inserisci password") }}
+                {% if form.password.errors %}
+                    {% for error in form.password.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                {% endif %}
+                <small class="form-text text-muted">La password deve essere di almeno 6 caratteri.</small>
+            </div>
+
+            <div class="form-group">
+                {{ form.nome.label }}
+                {{ form.nome(class="form-control", placeholder="Inserisci nome") }}
+                {% if form.nome.errors %}
+                    {% for error in form.nome.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.cognome.label }}
+                {{ form.cognome(class="form-control", placeholder="Inserisci cognome") }}
+                {% if form.cognome.errors %}
+                    {% for error in form.cognome.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.ruolo.label }}
+                {{ form.ruolo(class="form-control") }}
+                {% if form.ruolo.errors %}
+                    {% for error in form.ruolo.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                    {{ form.is_active(class="custom-control-input") }}
+                    {{ form.is_active.label(class="custom-control-label") }}
+                </div>
+                {% if form.is_active.errors %}
+                    {% for error in form.is_active.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.submit(class="btn btn-primary") }}
+                <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">Annulla</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

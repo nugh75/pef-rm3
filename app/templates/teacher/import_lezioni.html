@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Importa Lezioni</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Carica File Excel</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.csrf_token }}
+                        
+                        <div class="form-group">
+                            {{ form.file.label(class="form-label") }}
+                            {{ form.file(class="form-control") }}
+                            {% if form.file.errors %}
+                                {% for error in form.file.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Formati supportati: .xlsx, .xls
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Importa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if results %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Risultati Importazione</h5>
+                </div>
+                <div class="card-body">
+                    {% if results.success %}
+                    <div class="alert alert-success">
+                        <h6>Lezioni importate con successo: {{ results.success|length }}</h6>
+                        <ul class="mb-0">
+                        {% for lezione in results.success %}
+                            <li>{{ lezione.nome_lezione }} - {{ lezione.data.strftime('%d/%m/%Y') }}</li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if results.errors %}
+                    <div class="alert alert-danger">
+                        <h6>Errori durante l'importazione:</h6>
+                        <ul class="mb-0">
+                        {% for error in results.errors %}
+                            <li>Riga {{ error.row }}: {{ error.message }}</li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Istruzioni</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Il file Excel deve contenere le seguenti colonne:</h6>
+                    <ul>
+                        <li><strong>Nome Lezione</strong> - Nome o titolo della lezione</li>
+                        <li><strong>Data</strong> - Data della lezione (formato: GG/MM/AAAA)</li>
+                        <li><strong>Orario Inizio</strong> - Orario di inizio (formato: HH:MM)</li>
+                        <li><strong>Orario Fine</strong> - Orario di fine (formato: HH:MM)</li>
+                        <li><strong>Insegnante</strong> - Nome e cognome dell'insegnante (formato: Nome Cognome)</li>
+                    </ul>
+                    <p>Colonne opzionali:</p>
+                    <ul>
+                        <li><strong>Classi di Concorso</strong> - Codici delle classi separate da virgola</li>
+                        <li><strong>Dipartimenti</strong> - Nomi dei dipartimenti separati da virgola</li>
+                        <li><strong>Percorsi</strong> - Nomi dei percorsi separati da virgola</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

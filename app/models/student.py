@@ -12,6 +12,10 @@ class Studenti(db.Model):
     scuola_assegnata_id = db.Column(db.Integer, db.ForeignKey('ScuoleAccreditate.id_scuola'))
     tutor_esterno = db.Column(db.String(150))
 
+    # Relazioni
+    tirocini_diretti = db.relationship('RegistroPresenzeTirocinioDiretto', backref='studente', lazy=True)
+    tirocini_indiretti = db.relationship('RegistroPresenzeTirocinioIndiretto', backref='studente', lazy=True)
+
 class RegistroPresenzeTirocinioDiretto(db.Model):
     __tablename__ = 'RegistroPresenzeTirocinioDiretto'
     id_tirocinio_diretto = db.Column(db.Integer, primary_key=True)
@@ -23,6 +27,9 @@ class RegistroPresenzeTirocinioDiretto(db.Model):
     cfu = db.Column(db.Float)
     descrizione_attivita = db.Column(db.Text)
 
+    # Relazioni
+    scuola = db.relationship('ScuoleAccreditate', backref='tirocini_diretti', lazy=True)
+
 class RegistroPresenzeTirocinioIndiretto(db.Model):
     __tablename__ = 'RegistroPresenzeTirocinioIndiretto'
     id_tirocinio_indiretto = db.Column(db.Integer, primary_key=True)
@@ -31,4 +38,6 @@ class RegistroPresenzeTirocinioIndiretto(db.Model):
     data = db.Column(db.Date, nullable=False)
     ore = db.Column(db.Float, nullable=False)
     cfu = db.Column(db.Float)
-    descrizione_attivita = db.Column(db.Text) 
+    descrizione_attivita = db.Column(db.Text)
+
+    # La relazione con il tutor coordinatore è già definita nel modello TutorCoordinatori

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Modifica Tutor Coordinatore</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="form-group mb-3">
+                            <label for="nome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="nome" name="nome" 
+                                   value="{{ tutor.nome }}" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="cognome" class="form-label">Cognome</label>
+                            <input type="text" class="form-control" id="cognome" name="cognome" 
+                                   value="{{ tutor.cognome }}" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ tutor.email }}" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="telefono" class="form-label">Telefono</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" 
+                                   value="{{ tutor.telefono }}">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="dipartimento_id" class="form-label">Dipartimento</label>
+                            <select class="form-control" id="dipartimento_id" name="dipartimento_id">
+                                <option value="">Seleziona un dipartimento</option>
+                                {% for d in dipartimenti %}
+                                <option value="{{ d.id }}" 
+                                        {{ 'selected' if tutor.dipartimento_id == d.id }}>
+                                    {{ d.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="ore_disponibili" class="form-label">Ore Disponibili</label>
+                            <input type="number" class="form-control" id="ore_disponibili" name="ore_disponibili" 
+                                   min="0" value="{{ tutor.ore_disponibili }}">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="specializzazione" class="form-label">Specializzazione</label>
+                            <input type="text" class="form-control" id="specializzazione" name="specializzazione" 
+                                   value="{{ tutor.specializzazione }}">
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salva Modifiche
+                            </button>
+                            <a href="{{ url_for('tutor.tutor_coordinatori') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annulla
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

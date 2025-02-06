@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Scuole Accreditate</h2>
+        </div>
+        <div class="col text-right">
+            <a href="{{ url_for('school.add_scuola_accreditata') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nuova Scuola
+            </a>
+        </div>
+    </div>
+
+    {% if scuole %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nome Scuola</th>
+                            <th>Indirizzo</th>
+                            <th>Referente</th>
+                            <th>Email Referente</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scuola in scuole %}
+                        <tr>
+                            <td>{{ scuola.nome_scuola }}</td>
+                            <td>{{ scuola.indirizzo }}</td>
+                            <td>{{ scuola.referente }}</td>
+                            <td>{{ scuola.email_referente }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('school.edit_scuola_accreditata', id=scuola.id_scuola) }}" 
+                                       class="btn btn-sm btn-info" title="Modifica">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ url_for('school.delete_scuola_accreditata', id=scuola.id_scuola) }}" 
+                                          method="POST" class="d-inline"
+                                          onsubmit="return confirm('Sei sicuro di voler eliminare questa scuola?');">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Elimina">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        Nessuna scuola accreditata trovata.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

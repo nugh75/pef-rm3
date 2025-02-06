@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="display-4">403</h1>
+            <h2>Accesso Negato</h2>
+            <p class="lead">Non hai i permessi necessari per accedere a questa pagina.</p>
+            <hr>
+            <p>Torna alla <a href="{{ url_for('main.index') }}">pagina principale</a> o contatta l'amministratore se pensi che questo sia un errore.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Registro Tirocinio Diretto</h2>
+        </div>
+    </div>
+
+    <!-- Filtri -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Filtri</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-5">
+                            <label for="studente" class="form-label">Studente</label>
+                            <input type="text" class="form-control" id="studente" name="studente" 
+                                   value="{{ request.args.get('studente', '') }}" 
+                                   placeholder="Nome o cognome dello studente">
+                        </div>
+                        <div class="col-md-5">
+                            <label for="scuola" class="form-label">Scuola</label>
+                            <input type="text" class="form-control" id="scuola" name="scuola" 
+                                   value="{{ request.args.get('scuola', '') }}"
+                                   placeholder="Nome della scuola">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i> Cerca
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Riepilogo -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Riepilogo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>Numero Tirocini</h6>
+                            <p class="h3">{{ tirocini|length }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Ore Totali</h6>
+                            <p class="h3">{{ tirocini|sum(attribute='ore')|round(2) }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>CFU Totali</h6>
+                            <p class="h3">{{ tirocini|sum(attribute='cfu')|round(2) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista Tirocini -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Tirocini</h5>
+                    <a href="{{ url_for('segreteria.add_tirocinio_diretto') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Nuovo Tirocinio
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if tirocini %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Studente</th>
+                                    <th>Scuola</th>
+                                    <th>Tutor Esterno</th>
+                                    <th>Ore</th>
+                                    <th>CFU</th>
+                                    <th>Descrizione</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tirocinio in tirocini %}
+                                <tr>
+                                    <td>{{ tirocinio.data.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ tirocinio.studente.nome }} {{ tirocinio.studente.cognome }}</td>
+                                    <td>{{ tirocinio.scuola.nome_scuola }}</td>
+                                    <td>{{ tirocinio.tutor_esterno }}</td>
+                                    <td>{{ tirocinio.ore|round(2) }}</td>
+                                    <td>{{ tirocinio.cfu|round(2) }}</td>
+                                    <td>{{ tirocinio.descrizione_attivita|truncate(50) }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('segreteria.edit_tirocinio_diretto', id=tirocinio.id_tirocinio_diretto) }}" 
+                                               class="btn btn-sm btn-info" title="Modifica">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="{{ url_for('segreteria.delete_tirocinio_diretto', id=tirocinio.id_tirocinio_diretto) }}" 
+                                                  method="POST" class="d-inline"
+                                                  onsubmit="return confirm('Sei sicuro di voler eliminare questo tirocinio?');">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Elimina">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        Nessun tirocinio trovato con i criteri di ricerca specificati.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

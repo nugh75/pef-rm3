@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Tutor Coordinatori</h2>
+        </div>
+        <div class="col text-right">
+            <a href="{{ url_for('tutor.add_tutor_coordinatore') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nuovo Tutor Coordinatore
+            </a>
+        </div>
+    </div>
+
+    {% if tutor %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Cognome</th>
+                            <th>Email</th>
+                            <th>Telefono</th>
+                            <th>Dipartimento</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in tutor %}
+                        <tr>
+                            <td>{{ t.nome }}</td>
+                            <td>{{ t.cognome }}</td>
+                            <td>{{ t.email }}</td>
+                            <td>{{ t.telefono }}</td>
+                            <td>{{ t.dipartimento.nome if t.dipartimento else 'Non assegnato' }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('tutor.edit_tutor_coordinatore', id=t.id_tutor_coordinatore) }}" 
+                                       class="btn btn-sm btn-info" title="Modifica">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ url_for('tutor.delete_tutor_coordinatore', id=t.id_tutor_coordinatore) }}" 
+                                          method="POST" class="d-inline"
+                                          onsubmit="return confirm('Sei sicuro di voler eliminare questo tutor?');">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Elimina">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        Nessun tutor coordinatore trovato.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
