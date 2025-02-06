@@ -3,13 +3,13 @@ Definizione dei ruoli utente per l'applicazione PEF-RM3.
 Centralizza tutte le definizioni dei ruoli in un unico file.
 """
 
-# Ruoli utente
+# Definizione dei ruoli dell'applicazione
 ROLE_ADMIN = 'admin'
-ROLE_STUDENTE = 'studente'
-ROLE_PROFESSORE = 'professore'
 ROLE_SEGRETERIA = 'segreteria'
-ROLE_TUTOR_COLLABORATORE = 'tutor_collaboratore'
+ROLE_PROFESSORE = 'professore'
+ROLE_STUDENTE = 'studente'
 ROLE_TUTOR_COORDINATORE = 'tutor_coordinatore'
+ROLE_TUTOR_COLLABORATORE = 'tutor_collaboratore'
 
 # Lista di tutti i ruoli disponibili
 ALL_ROLES = [
@@ -29,6 +29,16 @@ ROLE_DESCRIPTIONS = {
     ROLE_SEGRETERIA: 'Segreteria',
     ROLE_TUTOR_COLLABORATORE: 'Tutor Collaboratore',
     ROLE_TUTOR_COORDINATORE: 'Tutor Coordinatore'
+}
+
+# Permessi per ruolo
+ROLE_PERMISSIONS = {
+    ROLE_ADMIN: ['admin', 'segreteria', 'professore', 'studente', 'tutor'],
+    ROLE_SEGRETERIA: ['segreteria', 'professore', 'studente', 'tutor'],
+    ROLE_PROFESSORE: ['professore'],
+    ROLE_STUDENTE: ['studente'],
+    ROLE_TUTOR_COORDINATORE: ['tutor'],
+    ROLE_TUTOR_COLLABORATORE: ['tutor']
 }
 
 def get_role_description(role):
