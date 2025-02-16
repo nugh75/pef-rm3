@@ -1,3 +1,4 @@
+# Importazione delle librerie necessarie
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -8,24 +9,28 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, validators
 from sqlalchemy import or_
 
+# Importazione delle configurazioni personalizzate
 from config.config import config
 from config.roles import *
 from flask_wtf.csrf import CSRFProtect
 
-# Inizializza l'applicazione
+# Inizializzazione dell'applicazione Flask
 app = Flask(__name__)
 
-# Configura l'applicazione
+# Configurazione dell'applicazione con le impostazioni di sviluppo
 app_config = config['development']
 app_config.init_app(app)
 
-csrf = CSRFProtect(app)
-db = SQLAlchemy(app)
-login_manager = LoginManager()
+# Inizializzazione delle estensioni Flask
+csrf = CSRFProtect(app)  # Protezione CSRF
+db = SQLAlchemy(app)     # Database SQLAlchemy
+login_manager = LoginManager()  # Gestore del login
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- Modelli Database ---
+# --- Definizione dei Modelli del Database ---
+
+# Modello Utente con supporto per l'autenticazione
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -42,6 +47,7 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+# Modello per il registro delle presenze del tirocinio diretto
 class RegistroPresenzeTirocinioDiretto(db.Model):
     __tablename__ = 'RegistroPresenzeTirocinioDiretto'
     id_tirocinio_diretto = db.Column(db.Integer, primary_key=True)
@@ -53,6 +59,7 @@ class RegistroPresenzeTirocinioDiretto(db.Model):
     cfu = db.Column(db.Float)
     descrizione_attivita = db.Column(db.Text)
 
+# Modello per il registro delle presenze del tirocinio indiretto
 class RegistroPresenzeTirocinioIndiretto(db.Model):
     __tablename__ = 'RegistroPresenzeTirocinioIndiretto'
     id_tirocinio_indiretto = db.Column(db.Integer, primary_key=True)
@@ -63,6 +70,7 @@ class RegistroPresenzeTirocinioIndiretto(db.Model):
     cfu = db.Column(db.Float)
     descrizione_attivita = db.Column(db.Text)
 
+# Modello per i tutor coordinatori
 class TutorCoordinatori(db.Model):
     __tablename__ = 'TutorCoordinatori'
     id_tutor_coordinatore = db.Column(db.Integer, primary_key=True)
@@ -73,6 +81,7 @@ class TutorCoordinatori(db.Model):
     dipartimento_id = db.Column(db.Integer, db.ForeignKey('Dipartimenti.id'), nullable=True)
     dipartimento = db.relationship('Dipartimenti', backref='tutor_coordinatori', lazy=True)
 
+# Modello per i tutor collaboratori
 class TutorCollaboratori(db.Model):
     __tablename__ = 'TutorCollaboratori'
     id_tutor_collaboratore = db.Column(db.Integer, primary_key=True)
@@ -83,12 +92,14 @@ class TutorCollaboratori(db.Model):
     dipartimento_id = db.Column(db.Integer, db.ForeignKey('Dipartimenti.id'), nullable=False)
     dipartimento = db.relationship('Dipartimenti', backref='tutor_collaboratori', lazy=True)
 
+# Modello per i settori scientifico disciplinari
 class SSD(db.Model):
     __tablename__ = 'SSD'
     id_ssd = db.Column(db.Integer, primary_key=True)
     nome_ssd = db.Column(db.String(255), nullable=False)
     insegnanti = db.relationship('Insegnanti', backref='ssd', lazy=True)
 
+# Modello per gli insegnanti
 class Insegnanti(db.Model):
     __tablename__ = 'Insegnanti'
     id_insegnante = db.Column(db.Integer, primary_key=True)
@@ -101,16 +112,19 @@ class Insegnanti(db.Model):
     dipartimento = db.relationship('Dipartimenti', backref='insegnanti', lazy=True)
     lezioni = db.relationship('Lezioni', backref='insegnante', lazy=True)
 
+# Modello per i dipartimenti
 class Dipartimenti(db.Model):
     __tablename__ = 'Dipartimenti'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(255), nullable=False)
 
+# Modello per i percorsi formativi
 class Percorsi(db.Model):
     __tablename__ = 'Percorsi'
     id_percorso = db.Column(db.Integer, primary_key=True)
     nome_percorso = db.Column(db.String(255), nullable=False)
 
+# Modello per le lezioni
 class Lezioni(db.Model):
     __tablename__ = 'Lezioni'
     id_lezione = db.Column(db.Integer, primary_key=True)
@@ -132,21 +146,25 @@ class Lezioni(db.Model):
                              secondary='Lezioni_Percorsi',
                              backref=db.backref('lezioni_correlate', lazy='dynamic'))
 
+# Modello per la relazione tra lezioni e classi di concorso
 class LezioniClassiConcorso(db.Model):
     __tablename__ = 'Lezioni_ClassiConcorso'
     id_lezione = db.Column(db.Integer, db.ForeignKey('Lezioni.id_lezione'), primary_key=True)
     id_classe = db.Column(db.Integer, db.ForeignKey('Classi di concorso.id_classe'), primary_key=True)
 
+# Modello per la relazione tra lezioni e dipartimenti
 class LezioniDipartimenti(db.Model):
     __tablename__ = 'Lezioni_Dipartimenti'
     id_lezione = db.Column(db.Integer, db.ForeignKey('Lezioni.id_lezione'), primary_key=True)
     id_dipartimento = db.Column(db.Integer, db.ForeignKey('Dipartimenti.id'), primary_key=True)
 
+# Modello per la relazione tra lezioni e percorsi
 class LezioniPercorsi(db.Model):
     __tablename__ = 'Lezioni_Percorsi'
     id_lezione = db.Column(db.Integer, db.ForeignKey('Lezioni.id_lezione'), primary_key=True)
     id_percorso = db.Column(db.Integer, db.ForeignKey('Percorsi.id_percorso'), primary_key=True)
 
+# Modello per le classi di concorso
 class ClassiConcorso(db.Model):
     __tablename__ = 'Classi di concorso'
     id_classe = db.Column(db.Integer, primary_key=True)
@@ -154,6 +172,7 @@ class ClassiConcorso(db.Model):
     nome_classe = db.Column(db.String(4), nullable=False)
     denominazione_classe = db.Column(db.String(255), nullable=False)
 
+# Modello per le scuole accreditate
 class ScuoleAccreditate(db.Model):
     __tablename__ = 'ScuoleAccreditate'
     id_scuola = db.Column(db.Integer, primary_key=True)
@@ -162,6 +181,7 @@ class ScuoleAccreditate(db.Model):
     referente = db.Column(db.String(100))
     email_referente = db.Column(db.String(150))
 
+# Modello per gli studenti
 class Studenti(db.Model):
     __tablename__ = 'Studenti'
     id_studente = db.Column(db.Integer, primary_key=True)
@@ -174,19 +194,23 @@ class Studenti(db.Model):
     scuola_assegnata_id = db.Column(db.Integer, db.ForeignKey('ScuoleAccreditate.id_scuola'))
     tutor_esterno = db.Column(db.String(150))
 
+# Form per l'eliminazione dei tutor collaboratori
 class DeleteTutorCollaboratoreForm(FlaskForm):
     pass
 
+# Form per il login
 class LoginForm(FlaskForm):
     email = StringField('Email', [validators.DataRequired(), validators.Email()])
     password = PasswordField('Password', [validators.DataRequired()])
 
+# --- Funzioni di Utilità ---
 
-# --- Funzioni Utilità ---
+# Funzione per calcolare i CFU in base alle ore
 def calcola_cfu(ore, ore_per_cfu=6):
     """Calcola i CFU in base alle ore."""
     return round(ore / ore_per_cfu, 2) if ore else 0
 
+# Funzione per calcolare la durata e i CFU di una lezione
 def calcola_durata_e_cfu(orario_inizio, orario_fine):
     """Calcola durata e CFU da orario inizio e fine"""
     inizio = datetime.combine(date.today(), orario_inizio)
@@ -199,6 +223,7 @@ def calcola_durata_e_cfu(orario_inizio, orario_fine):
     durata_time = time(hour=ore_durata, minute=minuti_durata)
     return durata_time, cfu
 
+# Funzione per calcolare i totali delle attività di uno studente
 def calcola_totali_studente(id_studente):
     tirocini_diretti = RegistroPresenzeTirocinioDiretto.query.filter_by(id_studente=id_studente).all()
     tirocini_indiretti = RegistroPresenzeTirocinioIndiretto.query.filter_by(id_studente=id_studente).all()
@@ -213,6 +238,7 @@ def calcola_totali_studente(id_studente):
         'cfu_tirocinio_indiretto': cfu_indiretti
     }
 
+# Funzione per calcolare i totali delle attività di un professore
 def calcola_totali_professore(id_professore):
     lezioni = Lezioni.query.filter_by(id_insegnante=id_professore).all()
     numero_lezioni = len(lezioni)
@@ -224,6 +250,7 @@ def calcola_totali_professore(id_professore):
         'cfu_totali': cfu_totali
     }
 
+# Funzione per calcolare i totali delle attività di un tutor
 def calcola_totali_tutor(id_tutor):
     tirocini = RegistroPresenzeTirocinioIndiretto.query.filter_by(id_tutor_coordinatore=id_tutor).all()
     studenti = set(t.id_studente for t in tirocini)
@@ -235,11 +262,14 @@ def calcola_totali_tutor(id_tutor):
         'cfu_totali': cfu_totali
     }
 
-# --- Flask-Login ---
+# --- Gestione dell'Autenticazione ---
+
+# Caricamento dell'utente per Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Decoratore per il controllo dei ruoli
 def role_required(*roles):
     def decorator(f):
         @wraps(f)
@@ -253,7 +283,9 @@ def role_required(*roles):
         return decorated_function
     return decorator
 
-# --- Route ---
+# --- Route dell'Applicazione ---
+
+# Route per il login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -269,6 +301,7 @@ def login():
         flash('Email o password non validi.', 'error')
     return render_template('login.html', form=form)
 
+# Route per il logout
 @app.route('/logout')
 @login_required
 def logout():
@@ -277,6 +310,7 @@ def logout():
     flash('Logout effettuato con successo', 'success')
     return redirect(url_for('login'))
 
+# Route per la registrazione di nuovi utenti (solo admin)
 @app.route('/register', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_ADMIN)
@@ -298,6 +332,7 @@ def register():
         return redirect(url_for('admin_users'))
     return render_template('register.html')
 
+# Route per la gestione degli utenti (admin)
 @app.route('/admin/users')
 @login_required
 @role_required(ROLE_ADMIN)
@@ -305,6 +340,9 @@ def admin_users():
     users = User.query.all()
     return render_template('admin_users.html', users=users)
 
+# --- Route per la Gestione degli Utenti ---
+
+# Attivazione utente
 @app.route('/admin/users/activate/<int:id>', methods=['POST'])
 @login_required
 @role_required(ROLE_ADMIN)
@@ -315,6 +353,7 @@ def activate_user(id):
     flash('Utente attivato con successo!', 'success')
     return redirect(url_for('admin_users'))
 
+# Disattivazione utente
 @app.route('/admin/users/deactivate/<int:id>', methods=['POST'])
 @login_required
 @role_required(ROLE_ADMIN)
@@ -328,6 +367,7 @@ def deactivate_user(id):
         flash('Non puoi disattivare il tuo account!', 'error')
     return redirect(url_for('admin_users'))
 
+# Eliminazione utente
 @app.route('/admin/users/delete/<int:id>', methods=['POST'])
 @login_required
 @role_required(ROLE_ADMIN)
@@ -341,6 +381,7 @@ def delete_user(id):
         flash('Non puoi eliminare il tuo account!', 'error')
     return redirect(url_for('admin_users'))
 
+# Modifica utente
 @app.route('/admin/users/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_ADMIN)
@@ -362,12 +403,18 @@ def edit_user(id):
         return redirect(url_for('admin_users'))
     return render_template('edit_user.html', user=user)
 
+# --- Route per la Segreteria ---
+
+# Dashboard segreteria
 @app.route('/segreteria')
 @login_required
 @role_required(ROLE_SEGRETERIA)
 def segreteria():
     return render_template('segreterie.html')
 
+# --- Route per la Gestione degli Insegnanti ---
+
+# Lista degli insegnanti
 @app.route('/insegnanti')
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -375,6 +422,7 @@ def insegnanti():
     insegnanti_list = Insegnanti.query.options(db.joinedload(Insegnanti.dipartimento), db.joinedload(Insegnanti.ssd)).all()
     return render_template('tab_insegnanti.html', insegnanti=insegnanti_list)
 
+# Aggiunta di un nuovo insegnante
 @app.route('/add_insegnante', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -389,6 +437,7 @@ def add_insegnante():
         return redirect(url_for('insegnanti'))
     return render_template('add_insegnante.html', dipartimenti=dipartimenti, ssd_list=ssd_list)
 
+# Modifica di un insegnante esistente
 @app.route('/edit_insegnante/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -408,6 +457,7 @@ def edit_insegnante(id):
         return redirect(url_for('insegnanti'))
     return render_template('edit_insegnante.html', insegnante=insegnante, dipartimenti=dipartimenti, ssd_list=ssd_list)
 
+# Eliminazione di un insegnante
 @app.route('/delete_insegnante/<int:id>', methods=['POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -418,25 +468,9 @@ def delete_insegnante(id):
     flash('Insegnante eliminato con successo!', 'success')
     return redirect(url_for('insegnanti'))
 
-# @app.route('/scuole_accreditate')
-# @login_required
-# @role_required(ROLE_SEGRETERIA)
-# def scuole_accreditate():
-#     scuole = ScuoleAccreditate.query.all()
-#     return render_template('tab_scuole.html', scuole=scuole)
+# --- Route per la Gestione delle Scuole Accreditate ---
 
-@app.route('/scuole_accreditate/add', methods=['GET', 'POST'])
-@login_required
-@role_required(ROLE_SEGRETERIA)
-def add_scuola_accreditata():
-    if request.method == 'POST':
-        nuova_scuola = ScuoleAccreditate(nome_scuola=request.form['nome_scuola'], indirizzo=request.form['indirizzo'], referente=request.form['referente'], email_referente=request.form['email_referente'])
-        db.session.add(nuova_scuola)
-        db.session.commit()
-        flash('Scuola accreditata aggiunta con successo!', 'success')
-        return redirect(url_for('scuole_accreditate'))
-    return render_template('add_scuola.html')
-
+# Lista delle scuole accreditate
 @app.route('/scuole_accreditate')
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -449,6 +483,20 @@ def scuole_accreditate():
         print("DEBUG: scuole list is EMPTY") # Indicate if list is empty
     return render_template('tab_scuole.html', scuole=scuole)
 
+# Aggiunta di una nuova scuola accreditata
+@app.route('/scuole_accreditate/add', methods=['GET', 'POST'])
+@login_required
+@role_required(ROLE_SEGRETERIA)
+def add_scuola_accreditata():
+    if request.method == 'POST':
+        nuova_scuola = ScuoleAccreditate(nome_scuola=request.form['nome_scuola'], indirizzo=request.form['indirizzo'], referente=request.form['referente'], email_referente=request.form['email_referente'])
+        db.session.add(nuova_scuola)
+        db.session.commit()
+        flash('Scuola accreditata aggiunta con successo!', 'success')
+        return redirect(url_for('scuole_accreditate'))
+    return render_template('add_scuola.html')
+
+# Modifica di una scuola accreditata esistente
 @app.route('/scuole_accreditate/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -464,6 +512,7 @@ def edit_scuola_accreditata(id):
         return redirect(url_for('scuole_accreditate'))
     return render_template('edit_scuola.html', scuola=scuola)
 
+# Eliminazione di una scuola accreditata
 @app.route('/scuole_accreditate/delete/<int:id>', methods=['POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -474,6 +523,9 @@ def delete_scuola_accreditata(id):
     flash('Scuola accreditata eliminata con successo!', 'success')
     return redirect(url_for('scuole_accreditate'))
 
+# --- Route per la Gestione dei Tutor ---
+
+# Lista dei tutor coordinatori
 @app.route('/tutor_coordinatori')
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -481,6 +533,7 @@ def tutor_coordinatori():
     tutor = TutorCoordinatori.query.options(db.joinedload(TutorCoordinatori.dipartimento)).all()
     return render_template('tab_tutor.html', tutor=tutor)
 
+# Aggiunta di un nuovo tutor coordinatore
 @app.route('/tutor_coordinatori/add', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -494,6 +547,7 @@ def add_tutor():
         return redirect(url_for('tutor_coordinatori'))
     return render_template('add_tutor.html', dipartimenti=dipartimenti)
 
+# Modifica di un tutor coordinatore esistente
 @app.route('/tutor_coordinatori/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -511,6 +565,7 @@ def edit_tutor_coordinatore(id):
         return redirect(url_for('tutor_coordinatori'))
     return render_template('edit_tutor.html', tutor=tutor, dipartimenti=dipartimenti)
 
+# Eliminazione di un tutor coordinatore
 @app.route('/tutor_coordinatori/delete/<int:id>', methods=['POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -521,6 +576,7 @@ def delete_tutor_coordinatore(id):
     flash('Tutor coordinatore eliminato con successo!', 'success')
     return redirect(url_for('tutor_coordinatori'))
 
+# Lista dei tutor collaboratori
 @app.route('/tutor_collaboratori')
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -529,6 +585,7 @@ def tutor_collaboratori():
     delete_form = DeleteTutorCollaboratoreForm()
     return render_template('tab_tutor_collaboratori.html', tutor=tutor, form=delete_form)
 
+# Aggiunta di un nuovo tutor collaboratore
 @app.route('/tutor_collaboratori/add', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -542,6 +599,7 @@ def add_tutor_collaboratore():
         return redirect(url_for('tutor_collaboratori'))
     return render_template('add_tutor_collaboratore.html', dipartimenti=dipartimenti)
 
+# Modifica di un tutor collaboratore esistente
 @app.route('/tutor_collaboratori/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -559,6 +617,7 @@ def edit_tutor_collaboratore(id):
         return redirect(url_for('tutor_collaboratori'))
     return render_template('edit_tutor_collaboratore.html', tutor=tutor, dipartimenti=dipartimenti)
 
+# Eliminazione di un tutor collaboratore
 @app.route('/tutor_collaboratori/delete/<int:id>', methods=['POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -569,6 +628,9 @@ def delete_tutor_collaboratore(id):
     flash('Tutor collaboratore eliminato con successo!', 'success')
     return redirect(url_for('tutor_collaboratori'))
 
+# --- Route per la Gestione dei Tirocini ---
+
+# Registro delle presenze del tirocinio indiretto
 @app.route('/registro_tirocinio_indiretto')
 @login_required
 @role_required(ROLE_SEGRETERIA, ROLE_STUDENTE)
@@ -602,6 +664,7 @@ def registro_tirocinio_indiretto():
     cfu_sum = sum(t[0].cfu for t in tirocini if t[0].cfu)
     return render_template('tab_tirocinio_indiretto.html', tirocini=tirocini, studente=studente, tutor=tutor, cfu_sum=cfu_sum)
 
+# Aggiunta di un nuovo tirocinio indiretto
 @app.route('/registro_tirocinio_indiretto/add', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA, ROLE_STUDENTE)
@@ -618,6 +681,7 @@ def add_tirocinio_indiretto():
         return redirect(url_for('registro_tirocinio_indiretto'))
     return render_template('add_tirocinio_indiretto.html', studenti=studenti, tutor_coordinatori=tutor_coordinatori)
 
+# Modifica di un tirocinio indiretto esistente
 @app.route('/registro_tirocinio_indiretto/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA, ROLE_STUDENTE)
@@ -637,6 +701,7 @@ def edit_tirocinio_indiretto(id):
         return redirect(url_for('registro_tirocinio_indiretto'))
     return render_template('edit_tirocinio_indiretto.html', tirocinio=tirocinio, studenti=studenti, tutor_coordinatori=tutor_coordinatori)
 
+# Eliminazione di un tirocinio indiretto
 @app.route('/registro_tirocinio_indiretto/delete/<int:id>', methods=['POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -647,6 +712,7 @@ def delete_tirocinio_indiretto(id):
     flash('Tirocinio indiretto eliminato con successo!', 'success')
     return redirect(url_for('registro_tirocinio_indiretto'))
 
+# Registro delle presenze del tirocinio diretto
 @app.route('/registro_tirocinio_diretto')
 @login_required
 @role_required(ROLE_SEGRETERIA, ROLE_STUDENTE)
@@ -679,6 +745,7 @@ def registro_tirocinio_diretto():
     cfu_sum = sum(t[0].cfu for t in tirocini if t[0].cfu)
     return render_template('tab_tirocinio_diretto.html', tirocini=tirocini, studente=studente, scuola=scuola, cfu_sum=cfu_sum)
 
+# Aggiunta di un nuovo tirocinio diretto
 @app.route('/registro_tirocinio_diretto/add', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA, ROLE_STUDENTE)
@@ -699,6 +766,7 @@ def add_tirocinio_diretto():
             flash(f'Errore durante l\'aggiunta del tirocinio diretto: {str(e)}', 'error')
     return render_template('add_tirocinio_diretto.html', studenti=studenti, scuole=scuole)
 
+# Modifica di un tirocinio diretto esistente
 @app.route('/registro_tirocinio_diretto/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA, ROLE_STUDENTE)
@@ -719,6 +787,7 @@ def edit_tirocinio_diretto(id):
         return redirect(url_for('registro_tirocinio_diretto'))
     return render_template('edit_tirocinio_diretto.html', tirocinio=tirocinio, studenti=studenti, scuole=scuole)
 
+# Eliminazione di un tirocinio diretto
 @app.route('/registro_tirocinio_diretto/delete/<int:id>', methods=['POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA)
@@ -729,6 +798,9 @@ def delete_tirocinio_diretto(id):
     flash('Tirocinio diretto eliminato con successo!', 'success')
     return redirect(url_for('registro_tirocinio_diretto'))
 
+# --- Route per la Gestione delle Lezioni ---
+
+# Lista delle lezioni
 @app.route('/lezioni')
 @login_required
 @role_required(ROLE_SEGRETERIA, ROLE_PROFESSORE)
@@ -762,6 +834,7 @@ def lezioni():
         flash(f'Si è verificato un errore nel caricamento delle lezioni: {str(e)}', 'error')
         return redirect(url_for('index'))
 
+# Aggiunta di una nuova lezione
 @app.route('/add_lezione', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA, ROLE_PROFESSORE)
@@ -786,6 +859,7 @@ def add_lezione():
         flash(f'Errore durante la creazione della lezione: {str(e)}', 'error')
         return redirect(url_for('lezioni'))
 
+# Modifica di una lezione esistente
 @app.route('/edit_lezione/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required(ROLE_SEGRETERIA, ROLE_PROFESSORE)
@@ -821,6 +895,7 @@ def edit_lezione(id):
             flash(f'Errore durante l\'aggiornamento della lezione: {str(e)}', 'error')
     return render_template('edit_lezione.html', lezione=lezione, insegnanti=insegnanti, classi=classi, dipartimenti=dipartimenti, percorsi=percorsi)
 
+# Eliminazione di una lezione
 @app.route('/delete_lezione/<int:id>')
 @login_required
 @role_required(ROLE_SEGRETERIA, ROLE_PROFESSORE)
@@ -831,6 +906,9 @@ def delete_lezione(id):
     flash('Lezione eliminata con successo!', 'success')
     return redirect(url_for('lezioni'))
 
+# --- Route Principali ---
+
+# Route principale (homepage)
 @app.route('/')
 @login_required
 def index():
@@ -848,6 +926,7 @@ def index():
         return redirect(url_for('admin_users'))
     return render_template('index.html')
 
+# Area studente
 @app.route('/area_studente')
 @login_required
 @role_required(ROLE_STUDENTE)
@@ -856,6 +935,7 @@ def area_studente():
     totale_cfu = totali['cfu_tirocinio_diretto'] + totali['cfu_tirocinio_indiretto']
     return render_template('area_studente.html', totale_cfu=totale_cfu, **totali)
 
+# Area professore
 @app.route('/area_professore')
 @login_required
 @role_required(ROLE_PROFESSORE)
@@ -864,6 +944,7 @@ def area_professore():
     totali = calcola_totali_professore(current_user.id)
     return render_template('area_professore.html', lezioni=lezioni, **totali)
 
+# Area tutor coordinatore
 @app.route('/area_tutor_coordinatore')
 @login_required
 @role_required(ROLE_TUTOR_COORDINATORE)
@@ -878,27 +959,38 @@ def area_tutor_coordinatore():
     totali = calcola_totali_tutor(current_user.id)
     return render_template('area_tutor_coordinatore.html', studenti=studenti, **totali)
 
+# --- Route di Utilità ---
+
+# Recupero informazioni tutor esterno
 @app.route('/get_tutor_esterno/<int:id_studente>')
 @login_required
 def get_tutor_esterno(id_studente):
     studente = Studenti.query.get_or_404(id_studente)
     return {'tutor_esterno': studente.tutor_esterno if studente.tutor_esterno else ''}
 
+# Logout forzato
 @app.route('/force-logout')
 def force_logout():
     logout_user()
     session.clear()
     return redirect(url_for('login'))
 
+# --- Gestione degli Errori ---
+
+# Errore 404 - Pagina non trovata
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404
 
+# Errore 500 - Errore interno del server
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
 
+# --- Comandi CLI ---
+
+# Comando per creare le tabelle del database
 @app.cli.command('create-tables')
 def create_tables():
     """Crea tutte le tabelle nel database"""
@@ -908,6 +1000,7 @@ def create_tables():
     except Exception as e:
         print(f'Errore durante la creazione delle tabelle: {e}')
 
+# Comando per creare l'utente amministratore
 @app.cli.command('create-admin')
 def create_admin():
     """Crea il primo utente amministratore"""
@@ -924,6 +1017,6 @@ def create_admin():
     db.session.commit()
     print('Amministratore creato con successo!')
 
-
+# Avvio dell'applicazione
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
